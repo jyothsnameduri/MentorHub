@@ -2,8 +2,27 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = "";
+    try {
+      // Try to parse as JSON first
+      const errorData = await res.json();
+      errorMessage = errorData.message || JSON.stringify(errorData);
+    } catch (e) {
+      // If not JSON, get as text
+      const text = await res.text() || res.statusText;
+      errorMessage = text;
+    }
+    
+    // Special handling for 401 errors
+    if (res.status === 401) {
+      if (res.url.includes('/api/login')) {
+        throw new Error(`Invalid username or password. Please try again.`);
+      } else {
+        throw new Error(`Authentication required. Please log in.`);
+      }
+    }
+    
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
