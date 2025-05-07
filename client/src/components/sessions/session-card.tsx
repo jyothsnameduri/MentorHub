@@ -29,6 +29,7 @@ export default function SessionCard({ session }: SessionCardProps) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
+  // Strictly verify session ownership based on user's role
   const isOwnSession = user?.role === "mentor" 
     ? session.mentorId === user?.id 
     : session.menteeId === user?.id;

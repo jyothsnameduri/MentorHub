@@ -16,8 +16,11 @@ export default function MySessions() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("upcoming");
   
+  // Get sessions specific to this user's role
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions"],
+    // This route will return only sessions related to the current user in their role
+    // The backend filters by user ID and role (mentor/mentee)
   });
 
   if (!sessions && !isLoading) {
