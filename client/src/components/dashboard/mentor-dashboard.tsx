@@ -30,7 +30,8 @@ export default function MentorDashboard() {
           <div className="mb-6">
             <SessionRequests />
           </div>
-          <UpcomingSessions />
+          {/* Exclude pending sessions from this component to avoid duplication with SessionRequests */}
+          <UpcomingSessions excludePending={true} />
           <ActivityFeed />
         </div>
         

@@ -8,7 +8,7 @@ import { format, isTomorrow, isToday, parseISO } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function UpcomingSessions() {
+export default function UpcomingSessions({ excludePending = false }: { excludePending?: boolean }) {
   const { user } = useAuth();
   const [meetingId, setMeetingId] = useState<number | null>(null);
   
@@ -17,6 +17,12 @@ export default function UpcomingSessions() {
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions/upcoming"]
   });
+  
+  // Filter out pending sessions if the excludePending flag is true
+  // This prevents duplicate display of pending sessions when used with SessionRequests component
+  const filteredSessions = excludePending && sessions 
+    ? sessions.filter(session => session.status !== "pending") 
+    : sessions;
   
   const { data: mentors, isLoading: mentorsLoading } = useQuery<User[]>({
     queryKey: ["/api/mentors"],
@@ -176,8 +182,8 @@ export default function UpcomingSessions() {
         <a href="/my-sessions" className="text-sm text-primary hover:text-primary-dark">View all</a>
       </div>
       
-      {sessions && sessions.length > 0 ? (
-        sessions.map(session => {
+      {filteredSessions && filteredSessions.length > 0 ? (
+        filteredSessions.map(session => {
           const participant = getParticipantDetails(session);
           return (
             <div key={session.id} className="flex flex-col sm:flex-row border-b border-gray-200 py-4 last:border-0 last:pb-0 first:pt-0 items-start sm:items-center">
