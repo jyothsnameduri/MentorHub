@@ -4,6 +4,7 @@ import UpcomingSessions from "@/components/dashboard/upcoming-sessions";
 import ActivityFeed from "@/components/dashboard/activity-feed";
 import RecommendedMentors from "@/components/dashboard/recommended-mentors";
 import SkillsProgress from "@/components/dashboard/skills-progress";
+import SessionsChart from "@/components/dashboard/sessions-chart";
 
 export default function MenteeDashboard() {
   const { user } = useAuth();
@@ -20,6 +21,10 @@ export default function MenteeDashboard() {
       </section>
 
       <StatsOverview />
+      
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <SessionsChart />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
