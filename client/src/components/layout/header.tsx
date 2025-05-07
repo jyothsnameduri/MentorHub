@@ -37,25 +37,25 @@ export default function Header() {
           </div>
           <nav className="hidden md:ml-10 md:flex space-x-8">
             <Link href="/">
-              <a className={`text-neutral-default ${location === '/' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium`}>
+              <div className={`text-neutral-default ${location === '/' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
                 Dashboard
-              </a>
+              </div>
             </Link>
             <Link href="/find-mentors">
-              <a className={`text-neutral-default ${location === '/find-mentors' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium`}>
+              <div className={`text-neutral-default ${location === '/find-mentors' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
                 Find Mentors
-              </a>
+              </div>
             </Link>
             <Link href="/my-sessions">
-              <a className={`text-neutral-default ${location === '/my-sessions' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium`}>
+              <div className={`text-neutral-default ${location === '/my-sessions' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
                 My Sessions
-              </a>
+              </div>
             </Link>
             {user?.role === 'mentor' && (
               <Link href="/profile">
-                <a className={`text-neutral-default ${location === '/profile' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium`}>
+                <div className={`text-neutral-default ${location === '/profile' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
                   My Profile
-                </a>
+                </div>
               </Link>
             )}
           </nav>
@@ -72,7 +72,7 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.profileImage} alt={user?.firstName} />
+                    <AvatarImage src={user?.profileImage || undefined} alt={user?.firstName || 'User'} />
                     <AvatarFallback>{getInitials(`${user?.firstName} ${user?.lastName}`)}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -85,12 +85,12 @@ export default function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <Link href="/profile">
+                <Link href="/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
