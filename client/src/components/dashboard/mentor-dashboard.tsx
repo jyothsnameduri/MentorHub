@@ -7,6 +7,22 @@ import SessionsChart from "@/components/dashboard/sessions-chart";
 export default function MentorDashboard() {
   const { user } = useAuth();
 
+  // Extracted the availability component for easier placement
+  const AvailabilitySection = (
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h2 className="text-lg font-semibold mb-4">Your Availability</h2>
+      <p className="text-sm text-neutral mb-4">
+        Manage when you're available for mentorship sessions.
+      </p>
+      <a 
+        href="/profile#availability" 
+        className="block w-full py-2 px-4 bg-primary text-white rounded-md text-center font-medium hover:bg-primary-dark transition-colors"
+      >
+        Manage Availability
+      </a>
+    </div>
+  );
+
   return (
     <>
       <section className="mb-8">
@@ -29,6 +45,12 @@ export default function MentorDashboard() {
           <div className="mb-6">
             <SessionRequests />
           </div>
+          
+          {/* Availability section moved above Activity Feed */}
+          <div className="mb-6">
+            {AvailabilitySection}
+          </div>
+          
           <ActivityFeed />
         </div>
         
@@ -66,19 +88,6 @@ export default function MentorDashboard() {
                 </a>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Your Availability</h2>
-            <p className="text-sm text-neutral mb-4">
-              Manage when you're available for mentorship sessions.
-            </p>
-            <a 
-              href="/profile#availability" 
-              className="block w-full py-2 px-4 bg-primary text-white rounded-md text-center font-medium hover:bg-primary-dark transition-colors"
-            >
-              Manage Availability
-            </a>
           </div>
         </div>
       </div>
