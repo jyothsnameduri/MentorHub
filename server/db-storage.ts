@@ -238,6 +238,27 @@ export class DatabaseStorage implements IStorage {
       .from(feedback)
       .where(eq(feedback.toId, userId));
   }
+  
+  async getFeedbackGivenByUser(userId: number): Promise<Feedback[]> {
+    return await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.fromId, userId));
+  }
+  
+  async getFeedbackBySessionAndUser(sessionId: number, userId: number): Promise<Feedback | undefined> {
+    const [existingFeedback] = await db
+      .select()
+      .from(feedback)
+      .where(
+        and(
+          eq(feedback.sessionId, sessionId),
+          eq(feedback.fromId, userId)
+        )
+      );
+      
+    return existingFeedback;
+  }
 
   // Skills methods
   async getSkillsForMentee(menteeId: number): Promise<Skill[]> {

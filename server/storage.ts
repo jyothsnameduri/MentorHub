@@ -39,6 +39,8 @@ export interface IStorage {
   // Feedback methods
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   getFeedbackForUser(userId: number): Promise<Feedback[]>;
+  getFeedbackGivenByUser(userId: number): Promise<Feedback[]>;
+  getFeedbackBySessionAndUser(sessionId: number, userId: number): Promise<Feedback | undefined>;
   
   // Skills methods
   getSkillsForMentee(menteeId: number): Promise<Skill[]>;
@@ -243,6 +245,18 @@ export class MemStorage implements IStorage {
   async getFeedbackForUser(userId: number): Promise<Feedback[]> {
     return Array.from(this.feedback.values()).filter(
       feedback => feedback.toId === userId
+    );
+  }
+  
+  async getFeedbackGivenByUser(userId: number): Promise<Feedback[]> {
+    return Array.from(this.feedback.values()).filter(
+      feedback => feedback.fromId === userId
+    );
+  }
+  
+  async getFeedbackBySessionAndUser(sessionId: number, userId: number): Promise<Feedback | undefined> {
+    return Array.from(this.feedback.values()).find(
+      feedback => feedback.sessionId === sessionId && feedback.fromId === userId
     );
   }
 

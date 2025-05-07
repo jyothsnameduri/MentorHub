@@ -359,16 +359,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback routes
   app.post("/api/feedback", isAuthenticated, async (req, res) => {
     try {
-      const data = { ...req.body, fromId: req.user?.id };
-      const validatedData = insertFeedbackSchema.parse(data);
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { sessionId, toId, rating, comment } = req.body;
+      
+      // Get the session to verify it's completed
+      const session = await storage.getSessionById(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Check if session is completed
+      if (session.status !== "completed") {
+        return res.status(400).json({ 
+          message: "Feedback can only be provided for completed sessions" 
+        });
+      }
+      
+      // Check if user is part of the session
+      const isUserInSession = session.mentorId === userId || session.menteeId === userId;
+      if (!isUserInSession) {
+        return res.status(403).json({ 
+          message: "You can only provide feedback for sessions you participated in" 
+        });
+      }
+      
+      // Validate that toId is the other participant
+      const expectedToId = userId === session.mentorId ? session.menteeId : session.mentorId;
+      if (toId !== expectedToId) {
+        return res.status(400).json({ 
+          message: "Invalid recipient for feedback" 
+        });
+      }
+      
+      // Check if user already left feedback for this session
+      const existingFeedback = await storage.getFeedbackBySessionAndUser(sessionId, userId);
+      if (existingFeedback) {
+        return res.status(400).json({ 
+          message: "You have already provided feedback for this session" 
+        });
+      }
+      
+      // Create and save the feedback
+      const feedbackData = {
+        sessionId,
+        fromId: userId,
+        toId,
+        rating,
+        comment: comment || null
+      };
+      
+      const validatedData = insertFeedbackSchema.parse(feedbackData);
       const feedback = await storage.createFeedback(validatedData);
+      
+      // Get participant name
+      const recipient = await storage.getUser(toId);
+      const recipientName = recipient ? `${recipient.firstName} ${recipient.lastName}` : "participant";
       
       // Create activity
       await storage.createActivity({
-        userId: req.user!.id,
+        userId,
         type: "feedback_given",
-        content: `You left feedback for a session`,
-        relatedUserId: validatedData.toId
+        content: `You left feedback for your session with ${recipientName}`,
+        relatedUserId: toId
+      });
+      
+      // Create activity for the recipient
+      await storage.createActivity({
+        userId: toId,
+        type: "feedback_received",
+        content: `${req.user?.firstName} ${req.user?.lastName} left feedback for your session`,
+        relatedUserId: userId
       });
       
       res.status(201).json(feedback);
