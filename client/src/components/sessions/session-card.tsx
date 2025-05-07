@@ -93,8 +93,35 @@ export default function SessionCard({ session }: SessionCardProps) {
   };
 
   const handleJoinSession = () => {
-    // In a real app, this would redirect to the video call
-    window.open(session.meetingLink || "https://meet.google.com", "_blank");
+    if (!session.meetingLink) {
+      toast({
+        title: "No meeting link available",
+        description: "This session doesn't have a Google Meet link yet.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Format the Google Meet URL correctly if needed
+    let meetingUrl = session.meetingLink;
+    if (!meetingUrl.startsWith('http')) {
+      // Handle just the meeting code
+      if (meetingUrl.includes('meet.google.com')) {
+        // The URL might already contain the domain but no protocol
+        meetingUrl = `https://${meetingUrl}`;
+      } else {
+        // It's likely just the meeting code
+        meetingUrl = `https://meet.google.com/${meetingUrl}`;
+      }
+    }
+    
+    // Open in a new tab
+    window.open(meetingUrl, "_blank");
+    
+    toast({
+      title: "Joining meeting",
+      description: "Opening Google Meet in a new tab...",
+    });
   };
 
   const handleCancel = () => {
