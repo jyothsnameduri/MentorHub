@@ -454,6 +454,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get feedback" });
     }
   });
+  
+  // Route to get feedback given by the authenticated user
+  app.get("/api/feedback/given", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const feedback = await storage.getFeedbackGivenByUser(userId);
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get feedback" });
+    }
+  });
+  
+  // Route to check if user has already provided feedback for a session
+  app.get("/api/feedback/session/:sessionId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ message: "Invalid session ID" });
+      }
+      
+      const feedback = await storage.getFeedbackBySessionAndUser(sessionId, userId);
+      res.json({ 
+        hasFeedback: !!feedback,
+        feedback 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check feedback status" });
+    }
+  });
 
   // Skills routes
   app.get("/api/skills", isMentee, async (req, res) => {

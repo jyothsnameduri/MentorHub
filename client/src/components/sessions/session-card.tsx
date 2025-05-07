@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Session, User, insertFeedbackSchema } from "@shared/schema";
+import { Session, User, Feedback, insertFeedbackSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Calendar, Video, Star } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -41,6 +41,17 @@ export default function SessionCard({ session }: SessionCardProps) {
     queryKey: [`/api/profile/${participantId}`],
     enabled: !!participantId && isOwnSession,
   });
+  
+  // Check if the user has already provided feedback for this session
+  const { data: userFeedback } = useQuery<Feedback[]>({
+    queryKey: ["/api/feedback/given"],
+    enabled: session.status === "completed" && isOwnSession,
+  });
+  
+  // Determine if the user has already left feedback for this session
+  const hasLeftFeedback = userFeedback?.some(
+    feedback => feedback.sessionId === session.id && feedback.fromId === user?.id
+  ) || false;
 
   const updateSessionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
@@ -94,9 +105,10 @@ export default function SessionCard({ session }: SessionCardProps) {
         description: "Thank you for your feedback!",
       });
       
-      // If the user is a mentee, we don't need to change the session status
-      // since the mentor has already marked it as completed
+      // Invalidate all relevant feedback queries
       queryClient.invalidateQueries({ queryKey: ["/api/feedback"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feedback/given"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
     },
     onError: (error) => {
       toast({
@@ -260,14 +272,20 @@ export default function SessionCard({ session }: SessionCardProps) {
                 <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md border border-green-200 mb-2">
                   Session completed
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleLeaveFeedback}
-                  className="w-full"
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Leave Feedback
-                </Button>
+                {hasLeftFeedback ? (
+                  <div className="text-sm text-blue-700 bg-blue-50 p-3 rounded-md border border-blue-200">
+                    Feedback provided
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLeaveFeedback}
+                    className="w-full"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Leave Feedback
+                  </Button>
+                )}
               </>
             )}
           </div>
