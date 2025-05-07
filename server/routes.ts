@@ -98,6 +98,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
+  
+  // Route to fetch multiple user profiles at once
+  app.get("/api/users/profiles", isAuthenticated, async (req, res) => {
+    try {
+      // Get all mentors and mentees
+      const allMentors = await storage.getAllMentors();
+      const allMentees = await storage.getAllMentees();
+      
+      // Build a record object with user ID as key
+      const userProfiles: Record<number, any> = {};
+      
+      // Add mentors to the profiles map
+      allMentors.forEach(user => {
+        // Don't include password
+        const { password, ...safeUser } = user;
+        userProfiles[user.id] = safeUser;
+      });
+      
+      // Add mentees to the profiles map
+      allMentees.forEach(user => {
+        if (!userProfiles[user.id]) {
+          const { password, ...safeUser } = user;
+          userProfiles[user.id] = safeUser;
+        }
+      });
+      
+      res.json(userProfiles);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user profiles" });
+    }
+  });
 
   // Mentor routes
   app.get("/api/mentors", isAuthenticated, async (req, res) => {

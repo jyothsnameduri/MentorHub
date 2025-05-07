@@ -4,6 +4,7 @@ import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import ProfileForm from "@/components/profile/profile-form";
 import AvailabilityCalendar from "@/components/profile/availability-calendar";
+import FeedbackHistory from "@/components/profile/feedback-history";
 import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,7 @@ export default function Profile() {
                 {user?.role === "mentor" && (
                   <TabsTrigger value="availability">Availability</TabsTrigger>
                 )}
+                <TabsTrigger value="feedback">Feedback</TabsTrigger>
               </TabsList>
               
               <TabsContent value="details">
@@ -90,6 +92,20 @@ export default function Profile() {
                   </Card>
                 </TabsContent>
               )}
+              
+              <TabsContent value="feedback">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Feedback History</CardTitle>
+                    <CardDescription>
+                      View feedback received from previous mentorship sessions.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <FeedbackHistory />
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
         </main>
