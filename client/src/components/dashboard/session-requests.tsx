@@ -7,13 +7,19 @@ import { Loader2, CheckCircle, XCircle, Calendar, Clock, User as UserIcon } from
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { AuthContext } from "@/hooks/use-auth";
+import { useContext } from "react";
 
 export default function SessionRequests() {
   const { toast } = useToast();
+  const auth = useContext(AuthContext);
+  const user = auth?.user;
   
   const { data: sessionRequests, isLoading, error } = useQuery<Session[]>({
     queryKey: ["/api/session-requests"],
     refetchInterval: 30000, // Refresh every 30s
+    // We'll always fetch if component is rendered (mentor check is in dashboard)
+    staleTime: 0, // Always consider the data stale to force a refresh
   });
   
   const { data: menteeUsers } = useQuery<Record<number, User>>({

@@ -38,6 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Invalidate all necessary queries to ensure fresh data on login
+      if (user.role === "mentor") {
+        queryClient.invalidateQueries({ queryKey: ["/api/session-requests"] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions/upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feedback"] });
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.firstName}!`,
