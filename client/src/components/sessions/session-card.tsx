@@ -88,7 +88,8 @@ export default function SessionCard({ session }: SessionCardProps) {
 
   const formatDate = (date: string, time: string) => {
     const dateObj = parseISO(`${date}T${time}`);
-    return format(dateObj, "EEEE, MMMM d, yyyy 'at' h:mm a");
+    // Format with the user's local timezone automatically included
+    return format(dateObj, "EEEE, MMMM d, yyyy 'at' h:mm a (z)");
   };
 
   const handleJoinSession = () => {

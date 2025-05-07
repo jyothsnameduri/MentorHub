@@ -192,8 +192,14 @@ export class MemStorage implements IStorage {
     const session = this.sessions.get(sessionId);
     if (!session || session.status !== "pending") return undefined;
     
-    // Generate a Google Meet link
-    const meetCode = Math.random().toString(36).substring(2, 10);
+    // Generate a Google Meet link with a more structured and memorable code
+    // Format: mentor-MM-mentee-YYYY-MM-DD (truncated to keep within Google Meet limits)
+    const mentor = await this.getUser(session.mentorId);
+    const mentee = await this.getUser(session.menteeId);
+    const datePart = session.date.replace(/-/g, '');
+    const meetCodeBase = `${mentor?.firstName?.toLowerCase() || 'mentor'}-${mentee?.firstName?.toLowerCase() || 'mentee'}-${datePart}`;
+    // Ensure the code is not too long for Google Meet's requirements
+    const meetCode = `${meetCodeBase}-${Math.random().toString(36).substring(2, 6)}`.substring(0, 15);
     const meetingLink = `https://meet.google.com/${meetCode}`;
     
     const updatedSession = { 

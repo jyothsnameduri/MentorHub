@@ -38,7 +38,7 @@ export default function MySessions() {
 
   // Filter sessions based on their status
   const upcomingSessions = sessions?.filter(
-    (session) => session.status === "scheduled"
+    (session) => session.status === "approved" || session.status === "pending"
   ) || [];
   
   const completedSessions = sessions?.filter(
@@ -46,7 +46,7 @@ export default function MySessions() {
   ) || [];
   
   const canceledSessions = sessions?.filter(
-    (session) => session.status === "canceled"
+    (session) => session.status === "canceled" || session.status === "rejected"
   ) || [];
 
   // Sort sessions by date (most recent first for upcoming, most recent last for completed)
@@ -84,7 +84,7 @@ export default function MySessions() {
               <div>
                 <h1 className="text-2xl font-bold text-neutral-default">My Sessions</h1>
                 <p className="text-neutral mt-1">
-                  Manage your scheduled, completed, and canceled sessions.
+                  Manage your pending, approved, completed, and canceled sessions.
                 </p>
               </div>
               
