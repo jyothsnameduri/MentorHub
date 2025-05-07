@@ -324,6 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Special handling for completing a session - only a mentor can mark as completed
       if (req.body.status === "completed") {
         if (userRole !== "mentor" || session.mentorId !== userId) {
+          console.log(`Permission denied: User ${userId} (${userRole}) tried to complete session ${sessionId} created by mentor ${session.mentorId}`);
           return res.status(403).json({ 
             message: "Only the mentor who created this session can mark it as completed" 
           });

@@ -146,6 +146,16 @@ export default function SessionCard({ session }: SessionCardProps) {
   };
 
   const handleCancel = () => {
+    // Ensure the user is part of this session
+    if (session.mentorId !== user?.id && session.menteeId !== user?.id) {
+      toast({
+        title: "Permission Denied",
+        description: "You can only cancel sessions that you are a part of.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     updateSessionMutation.mutate({ id: session.id, status: "canceled" });
   };
 
@@ -222,7 +232,7 @@ export default function SessionCard({ session }: SessionCardProps) {
                   <Video className="w-4 h-4 mr-2" />
                   Join Meeting
                 </Button>
-                {isMentor && (
+                {isMentor && session.mentorId === user?.id && (
                   <Button 
                     variant="secondary" 
                     onClick={() => updateSessionMutation.mutate({ id: session.id, status: "completed" })}
@@ -230,7 +240,9 @@ export default function SessionCard({ session }: SessionCardProps) {
                     End Session
                   </Button>
                 )}
-                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                {(session.mentorId === user?.id || session.menteeId === user?.id) && (
+                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                )}
               </>
             )}
             {session.status === "pending" && (
