@@ -25,6 +25,10 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { IStorage } from "./storage";
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Read meet links once at startup
 const meetLinks = fs.readFileSync(
