@@ -129,7 +129,7 @@ export default function SessionRequests() {
       <Card>
         <CardHeader>
           <CardTitle>Session Requests</CardTitle>
-          <CardDescription>You don't have any pending session requests.</CardDescription>
+          <CardDescription>You don't have any pending session requests. When mentees book a session with you, it will appear here for your approval.</CardDescription>
         </CardHeader>
       </Card>
     );

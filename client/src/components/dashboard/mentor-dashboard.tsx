@@ -1,6 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
 import StatsOverview from "@/components/dashboard/stats-card";
-import UpcomingSessions from "@/components/dashboard/upcoming-sessions";
 import ActivityFeed from "@/components/dashboard/activity-feed";
 import SessionRequests from "@/components/dashboard/session-requests";
 import SessionsChart from "@/components/dashboard/sessions-chart";
@@ -30,8 +29,6 @@ export default function MentorDashboard() {
           <div className="mb-6">
             <SessionRequests />
           </div>
-          {/* Exclude pending sessions from this component to avoid duplication with SessionRequests */}
-          <UpcomingSessions excludePending={true} />
           <ActivityFeed />
         </div>
         
