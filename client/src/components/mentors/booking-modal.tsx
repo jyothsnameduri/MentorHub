@@ -77,8 +77,7 @@ export default function BookingModal({ mentor, isOpen, onClose }: BookingModalPr
       date: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
       notes: notes || undefined,
-      status: "scheduled",
-      meetingLink: `https://meet.google.com/${Math.random().toString(36).substring(2, 10)}`,
+      status: "pending", // Starts as pending until mentor approves
     };
     
     // Add mentor name for activity feed

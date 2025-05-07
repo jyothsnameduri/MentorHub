@@ -30,8 +30,8 @@ export default function SessionCard({ session }: SessionCardProps) {
   const [comment, setComment] = useState("");
 
   const isOwnSession = user?.role === "mentor" 
-    ? session.mentorId === user.id 
-    : session.menteeId === user.id;
+    ? session.mentorId === user?.id 
+    : session.menteeId === user?.id;
 
   const isMentor = user?.role === "mentor";
   const participantId = isMentor ? session.menteeId : session.mentorId;
@@ -118,11 +118,14 @@ export default function SessionCard({ session }: SessionCardProps) {
   // Session card status styling
   const getStatusBadgeStyle = () => {
     switch (session.status) {
-      case "scheduled":
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "approved":
         return "bg-blue-100 text-blue-800";
       case "completed":
         return "bg-green-100 text-green-800";
       case "canceled":
+      case "rejected":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -160,11 +163,28 @@ export default function SessionCard({ session }: SessionCardProps) {
           </div>
           
           <div className="flex flex-col space-y-2 md:ml-4 md:w-36">
-            {session.status === "scheduled" && (
+            {session.status === "approved" && (
               <>
-                <Button onClick={handleJoinSession}>Join Session</Button>
+                <Button 
+                  onClick={handleJoinSession}
+                  className="flex items-center justify-center"
+                  disabled={!session.meetingLink}
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  Join Meeting
+                </Button>
                 <Button variant="outline" onClick={handleCancel}>Cancel</Button>
               </>
+            )}
+            {session.status === "pending" && (
+              <div className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-md border border-yellow-200">
+                Awaiting approval from {isMentor ? "you" : "mentor"}
+              </div>
+            )}
+            {session.status === "rejected" && (
+              <div className="text-sm text-red-700 bg-red-50 p-3 rounded-md border border-red-200">
+                Request declined
+              </div>
             )}
             {session.status === "completed" && !showFeedbackModal && (
               <Button variant="outline" onClick={handleLeaveFeedback}>Leave Feedback</Button>

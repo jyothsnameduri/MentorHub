@@ -23,7 +23,7 @@ export default function SessionRequests() {
       if (!sessionRequests?.length) return {};
       
       // Get unique mentee IDs
-      const menteeIds = [...new Set(sessionRequests.map(req => req.menteeId))];
+      const menteeIds = Array.from(new Set(sessionRequests.map(req => req.menteeId)));
       
       // Fetch all needed users in one go
       const users: Record<number, User> = {};
