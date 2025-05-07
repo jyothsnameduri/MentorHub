@@ -58,7 +58,7 @@ export const sessions = pgTable("sessions", {
   date: text("date").notNull(), // '2023-09-15'
   time: text("time").notNull(), // '14:00'
   notes: text("notes"),
-  status: text("status").notNull().default("scheduled"), // 'scheduled', 'completed', 'canceled'
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'completed', 'canceled', 'rejected'
   meetingLink: text("meeting_link"),
   created: timestamp("created").defaultNow(),
 });

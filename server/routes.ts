@@ -129,17 +129,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Session routes
+  app.get("/api/session-requests", isMentor, async (req, res) => {
+    try {
+      const mentorId = req.user!.id;
+      const pendingRequests = await storage.getPendingSessionRequests(mentorId);
+      res.json(pendingRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get session requests" });
+    }
+  });
+  
+  app.post("/api/sessions/:id/approve", isMentor, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const session = await storage.getSessionById(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      if (session.mentorId !== req.user!.id) {
+        return res.status(403).json({ message: "You can only approve your own session requests" });
+      }
+      
+      const updatedSession = await storage.approveSessionRequest(sessionId);
+      
+      if (!updatedSession) {
+        return res.status(400).json({ message: "Unable to approve session request" });
+      }
+      
+      // Get mentee details
+      const mentee = await storage.getUser(session.menteeId);
+      
+      // Create activities for both mentor and mentee
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "session_approved",
+        content: `You approved a session with ${mentee?.firstName} ${mentee?.lastName}`,
+        relatedUserId: session.menteeId
+      });
+      
+      await storage.createActivity({
+        userId: session.menteeId,
+        type: "session_confirmed",
+        content: `${req.user!.firstName} ${req.user!.lastName} approved your session request`,
+        relatedUserId: req.user!.id
+      });
+      
+      res.json(updatedSession);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve session request" });
+    }
+  });
+  
+  app.post("/api/sessions/:id/reject", isMentor, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const session = await storage.getSessionById(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      if (session.mentorId !== req.user!.id) {
+        return res.status(403).json({ message: "You can only reject your own session requests" });
+      }
+      
+      const updatedSession = await storage.rejectSessionRequest(sessionId);
+      
+      if (!updatedSession) {
+        return res.status(400).json({ message: "Unable to reject session request" });
+      }
+      
+      // Get mentee details
+      const mentee = await storage.getUser(session.menteeId);
+      
+      // Create activities for both mentor and mentee
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "session_rejected",
+        content: `You declined a session with ${mentee?.firstName} ${mentee?.lastName}`,
+        relatedUserId: session.menteeId
+      });
+      
+      await storage.createActivity({
+        userId: session.menteeId,
+        type: "session_declined",
+        content: `${req.user!.firstName} ${req.user!.lastName} declined your session request`,
+        relatedUserId: req.user!.id
+      });
+      
+      res.json(updatedSession);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reject session request" });
+    }
+  });
+  
   app.post("/api/sessions", isMentee, async (req, res) => {
     try {
-      const data = { ...req.body, menteeId: req.user?.id };
+      const data = { ...req.body, menteeId: req.user?.id, status: "pending" };
       const validatedData = insertSessionSchema.parse(data);
       const session = await storage.createSession(validatedData);
+      
+      // Get mentor details
+      const mentor = await storage.getUser(validatedData.mentorId);
       
       // Create activity for both mentee and mentor
       await storage.createActivity({
         userId: req.user!.id,
         type: "session_created",
-        content: `You requested a session with ${req.body.mentorName}`,
+        content: `You requested a session with ${mentor?.firstName} ${mentor?.lastName}`,
         relatedUserId: validatedData.mentorId
       });
       

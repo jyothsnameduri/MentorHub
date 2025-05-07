@@ -31,6 +31,9 @@ export interface IStorage {
   getSessionById(id: number): Promise<Session | undefined>;
   getSessionsForUser(userId: number, role: "mentor" | "mentee"): Promise<Session[]>;
   getUpcomingSessions(userId: number, role: "mentor" | "mentee"): Promise<Session[]>;
+  getPendingSessionRequests(mentorId: number): Promise<Session[]>;
+  approveSessionRequest(sessionId: number): Promise<Session | undefined>;
+  rejectSessionRequest(sessionId: number): Promise<Session | undefined>;
   updateSession(id: number, data: Partial<Session>): Promise<Session | undefined>;
   
   // Feedback methods
@@ -160,13 +163,60 @@ export class MemStorage implements IStorage {
       .filter(session => {
         const isUserSession = role === "mentor" ? session.mentorId === userId : session.menteeId === userId;
         const sessionDate = new Date(`${session.date}T${session.time}`);
-        return isUserSession && sessionDate >= today && session.status === "scheduled";
+        return isUserSession && sessionDate >= today && (session.status === "approved" || session.status === "pending");
       })
       .sort((a, b) => {
         const dateA = new Date(`${a.date}T${a.time}`);
         const dateB = new Date(`${b.date}T${b.time}`);
         return dateA.getTime() - dateB.getTime();
       });
+  }
+  
+  async getPendingSessionRequests(mentorId: number): Promise<Session[]> {
+    const today = new Date();
+    return Array.from(this.sessions.values())
+      .filter(session => {
+        const sessionDate = new Date(`${session.date}T${session.time}`);
+        return session.mentorId === mentorId && 
+               sessionDate >= today && 
+               session.status === "pending";
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.time}`);
+        const dateB = new Date(`${b.date}T${b.time}`);
+        return dateA.getTime() - dateB.getTime();
+      });
+  }
+  
+  async approveSessionRequest(sessionId: number): Promise<Session | undefined> {
+    const session = this.sessions.get(sessionId);
+    if (!session || session.status !== "pending") return undefined;
+    
+    // Generate a Google Meet link
+    const meetCode = Math.random().toString(36).substring(2, 10);
+    const meetingLink = `https://meet.google.com/${meetCode}`;
+    
+    const updatedSession = { 
+      ...session, 
+      status: "approved", 
+      meetingLink 
+    };
+    
+    this.sessions.set(sessionId, updatedSession);
+    return updatedSession;
+  }
+  
+  async rejectSessionRequest(sessionId: number): Promise<Session | undefined> {
+    const session = this.sessions.get(sessionId);
+    if (!session || session.status !== "pending") return undefined;
+    
+    const updatedSession = { 
+      ...session, 
+      status: "rejected"
+    };
+    
+    this.sessions.set(sessionId, updatedSession);
+    return updatedSession;
   }
 
   async updateSession(id: number, data: Partial<Session>): Promise<Session | undefined> {
