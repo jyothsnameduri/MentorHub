@@ -315,8 +315,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the user is part of this session
       const userId = req.user?.id;
+      const userRole = req.user?.role;
+      
       if (session.mentorId !== userId && session.menteeId !== userId) {
         return res.status(403).json({ message: "You don't have permission to update this session" });
+      }
+      
+      // Special handling for completing a session - only a mentor can mark as completed
+      if (req.body.status === "completed") {
+        if (userRole !== "mentor" || session.mentorId !== userId) {
+          return res.status(403).json({ 
+            message: "Only the mentor who created this session can mark it as completed" 
+          });
+        }
+        
+        // Get mentee details to create activity
+        const mentee = await storage.getUser(session.menteeId);
+        
+        // Create activity for both mentor and mentee
+        await storage.createActivity({
+          userId: userId,
+          type: "session_completed",
+          content: `You marked your session with ${mentee?.firstName} ${mentee?.lastName} as completed`,
+          relatedUserId: session.menteeId
+        });
+        
+        await storage.createActivity({
+          userId: session.menteeId,
+          type: "session_completed",
+          content: `${req.user?.firstName} ${req.user?.lastName} marked your session as completed. Please leave feedback!`,
+          relatedUserId: userId
+        });
       }
       
       const updatedSession = await storage.updateSession(sessionId, req.body);
