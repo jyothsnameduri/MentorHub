@@ -7,9 +7,9 @@ import {
   Activity, InsertActivity
 } from "@shared/schema";
 import createMemoryStore from "memorystore";
-import session from "express-session";
+import * as expressSession from "express-session";
 
-const MemoryStore = createMemoryStore(session);
+const MemoryStore = createMemoryStore(expressSession);
 
 // modify the interface with any CRUD methods
 // you might need
@@ -50,7 +50,7 @@ export interface IStorage {
   createActivity(activity: InsertActivity): Promise<Activity>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: expressSession.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -68,7 +68,7 @@ export class MemStorage implements IStorage {
   private skillCurrentId: number;
   private activityCurrentId: number;
   
-  sessionStore: session.SessionStore;
+  sessionStore: expressSession.Store;
 
   constructor() {
     this.users = new Map();

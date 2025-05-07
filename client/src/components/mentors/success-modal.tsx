@@ -25,10 +25,10 @@ export default function SuccessModal({
             <CheckCircle className="h-6 w-6 text-secondary" />
           </div>
           <h3 className="text-lg font-medium text-neutral-default mb-2">
-            Session Booked Successfully!
+            Session Request Submitted!
           </h3>
           <p className="text-sm text-neutral mb-6">
-            Your session with {mentorName} has been scheduled for {sessionDate}, {sessionTime}.
+            Your session request with {mentorName} for {sessionDate}, {sessionTime} has been submitted.
           </p>
           
           <div className="bg-neutral-lighter rounded-md p-4 mb-6 text-left">
@@ -36,17 +36,17 @@ export default function SuccessModal({
             <ul className="space-y-2 text-sm">
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-secondary mr-2 flex-shrink-0" />
-                <span>You'll receive a calendar invite and email confirmation shortly</span>
+                <span>Your request is awaiting approval from {mentorName}</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-secondary mr-2 flex-shrink-0" />
                 <span>
-                  You can access the video meeting link from your dashboard 5 minutes before the session
+                  Once approved, you'll receive a confirmation with the Google Meet link
                 </span>
               </li>
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-secondary mr-2 flex-shrink-0" />
-                <span>Remember to prepare any specific questions for your mentor</span>
+                <span>You can track the status of your request in the "My Sessions" section</span>
               </li>
             </ul>
           </div>
