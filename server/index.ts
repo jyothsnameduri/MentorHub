@@ -36,7 +36,59 @@ app.use((req, res, next) => {
   next();
 });
 
+// Seed function to create test users if none exist
+async function seedTestUsers() {
+  const { storage } = await import("./storage");
+  const { hashPassword } = await import("./auth");
+  
+  try {
+    // Check if we have any users
+    const users = Array.from((storage as any).users?.values() || []);
+    
+    if (users.length === 0) {
+      console.log("No users found. Seeding test users...");
+      
+      // Create a test mentee user
+      await storage.createUser({
+        username: "mentee",
+        password: await hashPassword("password"),
+        email: "mentee@example.com",
+        firstName: "Mentee",
+        lastName: "User",
+        role: "mentee",
+        title: "Student",
+        organization: "University",
+        bio: "Looking to learn new skills",
+        profileImage: null,
+        specialties: null
+      });
+      
+      // Create a test mentor user
+      await storage.createUser({
+        username: "mentor",
+        password: await hashPassword("password"),
+        email: "mentor@example.com",
+        firstName: "Mentor",
+        lastName: "Expert",
+        role: "mentor",
+        title: "Senior Developer",
+        organization: "Tech Company",
+        bio: "Experienced developer ready to help",
+        profileImage: null,
+        specialties: ["JavaScript", "React", "Node.js"]
+      });
+      
+      console.log("Test users created successfully");
+    }
+  } catch (error) {
+    console.error("Error seeding test users:", error);
+  }
+}
+
 (async () => {
+  // Seed test users before registering routes
+  await seedTestUsers();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

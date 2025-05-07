@@ -32,6 +32,23 @@ const isMentee = (req: Request, res: Response, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
+  
+  // Debug endpoints - remove in production
+  app.get("/api/debug/users", async (req, res) => {
+    try {
+      const users = Array.from((storage as any).users?.values() || []).map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      }));
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users", error: String(error) });
+    }
+  });
 
   // Error handler for Zod validation errors
   const handleZodError = (error: unknown, res: Response) => {
