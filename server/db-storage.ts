@@ -72,6 +72,10 @@ export class DatabaseStorage implements IStorage {
   async getAllMentors(): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, "mentor"));
   }
+  
+  async getAllMentees(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, "mentee"));
+  }
 
   // Availability methods
   async getAvailabilityForMentor(mentorId: number): Promise<Availability[]> {

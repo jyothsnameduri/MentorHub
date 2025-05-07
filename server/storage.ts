@@ -20,6 +20,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
   getAllMentors(): Promise<User[]>;
+  getAllMentees(): Promise<User[]>;
   
   // Availability methods
   getAvailabilityForMentor(mentorId: number): Promise<Availability[]>;
@@ -121,6 +122,10 @@ export class MemStorage implements IStorage {
 
   async getAllMentors(): Promise<User[]> {
     return Array.from(this.users.values()).filter(user => user.role === "mentor");
+  }
+  
+  async getAllMentees(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.role === "mentee");
   }
 
   // Availability methods
