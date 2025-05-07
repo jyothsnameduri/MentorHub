@@ -5,32 +5,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function FeedbackHistory() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"received" | "given">("received");
-
+  
+  // Following privacy requirements - users can only see feedback they received
   // Get feedback received by the user
   const { data: feedbackReceived, isLoading: isLoadingReceived } = useQuery<Feedback[]>({
     queryKey: ["/api/feedback"],
     enabled: !!user,
   });
-
-  // Get feedback given by the user
-  const { data: feedbackGiven, isLoading: isLoadingGiven } = useQuery<Feedback[]>({
-    queryKey: ["/api/feedback/given"],
-    enabled: !!user,
-  });
-
-  // Get user profiles for all users involved in feedback
+  
+  // Get user profiles for feedback givers
   const { data: userProfiles, isLoading: isLoadingProfiles } = useQuery<Record<number, User>>({
     queryKey: ["/api/users/profiles"],
-    enabled: (!!feedbackReceived && feedbackReceived.length > 0) || (!!feedbackGiven && feedbackGiven.length > 0),
+    enabled: !!feedbackReceived && feedbackReceived.length > 0,
   });
 
-  const isLoading = isLoadingReceived || isLoadingGiven || isLoadingProfiles;
+  const isLoading = isLoadingReceived || isLoadingProfiles;
 
   const formatDate = (created: string | Date | null) => {
     if (!created) return "";
@@ -62,27 +54,17 @@ export default function FeedbackHistory() {
     );
   }
 
-  const currentFeedback = activeTab === "received" ? feedbackReceived : feedbackGiven;
-  const hasNoFeedback = !currentFeedback || currentFeedback.length === 0;
-  const emptyMessage = activeTab === "received" 
-    ? "You haven't received any feedback yet." 
-    : "You haven't given any feedback yet.";
+  const hasNoFeedback = !feedbackReceived || feedbackReceived.length === 0;
 
-  // Render the feedback items
+  // Render individual feedback item
   const renderFeedbackItem = (feedback: Feedback) => {
-    // For "received" tab, show who gave the feedback
-    // For "given" tab, show who received the feedback
-    const otherId = activeTab === "received" ? feedback.fromId : feedback.toId;
-    const otherProfile = userProfiles?.[otherId];
+    // Show profile of who gave the feedback
+    const giverProfile = userProfiles?.[feedback.fromId];
     
-    const initials = otherProfile ? 
-      `${otherProfile.firstName[0]}${otherProfile.lastName[0]}` : 
+    // Create initials for avatar fallback
+    const initials = giverProfile ? 
+      `${giverProfile.firstName[0]}${giverProfile.lastName[0]}` : 
       "??";
-
-    // Get a title for the feedback item
-    const title = activeTab === "received"
-      ? `Feedback from ${otherProfile?.firstName} ${otherProfile?.lastName}`
-      : `Feedback to ${otherProfile?.firstName} ${otherProfile?.lastName}`;
 
     return (
       <Card key={feedback.id} className="overflow-hidden">
@@ -91,8 +73,8 @@ export default function FeedbackHistory() {
             <div className="mr-4">
               <Avatar className="h-10 w-10">
                 <AvatarImage 
-                  src={otherProfile?.profileImage || undefined} 
-                  alt={`${otherProfile?.firstName} ${otherProfile?.lastName}`} 
+                  src={giverProfile?.profileImage || undefined} 
+                  alt={`${giverProfile?.firstName} ${giverProfile?.lastName}`} 
                 />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -101,7 +83,7 @@ export default function FeedbackHistory() {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-medium">
-                    {otherProfile?.firstName} {otherProfile?.lastName}
+                    {giverProfile?.firstName} {giverProfile?.lastName}
                   </p>
                   <p className="text-sm text-neutral-500">
                     {formatDate(feedback.created)}
@@ -126,24 +108,17 @@ export default function FeedbackHistory() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-center mb-6">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "received" | "given")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="received">Feedback Received</TabsTrigger>
-            <TabsTrigger value="given">Feedback Given</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
+      <h3 className="text-lg font-semibold text-center mb-4">Feedback From Others</h3>
+      
       {hasNoFeedback ? (
         <Card className="bg-neutral-50 border-dashed border-neutral-200">
           <CardContent className="pt-6 text-center text-neutral-500">
-            <p>{emptyMessage}</p>
+            <p>You haven't received any feedback yet.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {currentFeedback?.map(renderFeedbackItem)}
+          {feedbackReceived?.map(renderFeedbackItem)}
         </div>
       )}
     </div>
