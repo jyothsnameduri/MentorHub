@@ -57,7 +57,9 @@ export default function MentorCard({ mentor }: MentorCardProps) {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-3 w-3 ${i < Math.round(rating) ? "fill-accent text-accent" : "text-gray-300"}`}
+                      className={`h-4 w-4 ${i < Math.round(rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                      fill={i < Math.round(rating) ? "#FFD700" : "none"}
+                      stroke="#FFD700"
                     />
                   ))}
                 </div>

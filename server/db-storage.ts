@@ -23,6 +23,21 @@ import {
 import { db, pool } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { IStorage } from "./storage";
+import fs from 'fs';
+import path from 'path';
+
+// Read meet links once at startup
+const meetLinks = fs.readFileSync(
+  path.join(__dirname, '../meet collection.txt'),
+  'utf-8'
+)
+  .split('\n')
+  .map(line => line.trim())
+  .filter(line => line.startsWith('https://meet.google.com/'));
+
+function getRandomMeetLink() {
+  return meetLinks[Math.floor(Math.random() * meetLinks.length)];
+}
 
 export class DatabaseStorage implements IStorage {
   sessionStore: expressSession.Store;
@@ -180,14 +195,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveSessionRequest(sessionId: number): Promise<Session | undefined> {
-    // Use a simple static mocked meeting URL instead of generating one
     const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
     if (!session) return undefined;
     
-    // Create a mocked, consistent meeting link - no need to generate a unique one
-    const meetingLink = "https://meet.google.com/mentormatch-session";
+    // Assign a random Google Meet link from meet collection.txt
+    const meetingLink = getRandomMeetLink();
     
-    // Update the session with the mocked meeting link
     const [updatedSession] = await db
       .update(sessions)
       .set({

@@ -135,22 +135,22 @@ export default function SessionCard({ session }: SessionCardProps) {
       return;
     }
     
+    // Debug log for the meeting link
+    console.log('Attempting to join meeting with link:', session.meetingLink);
+    
     // Format the Google Meet URL correctly if needed
-    let meetingUrl = session.meetingLink;
+    let meetingUrl = session.meetingLink.trim();
     if (!meetingUrl.startsWith('http')) {
-      // Handle just the meeting code
       if (meetingUrl.includes('meet.google.com')) {
-        // The URL might already contain the domain but no protocol
         meetingUrl = `https://${meetingUrl}`;
       } else {
-        // It's likely just the meeting code
         meetingUrl = `https://meet.google.com/${meetingUrl}`;
       }
     }
-    
+    // Remove any trailing or leading whitespace
+    meetingUrl = meetingUrl.replace(/\s+/g, '');
     // Open in a new tab
     window.open(meetingUrl, "_blank");
-    
     toast({
       title: "Joining meeting",
       description: "Opening Google Meet in a new tab...",
