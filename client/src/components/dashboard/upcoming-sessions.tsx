@@ -12,6 +12,8 @@ export default function UpcomingSessions() {
   const { user } = useAuth();
   const [meetingId, setMeetingId] = useState<number | null>(null);
   
+  // Get only sessions for the current user's role (mentor/mentee)
+  // The backend API filters based on user ID and role
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions/upcoming"],
   });
@@ -35,16 +37,38 @@ export default function UpcomingSessions() {
 
   const handleJoinSession = (sessionId: number) => {
     setMeetingId(sessionId);
-    // In a real application, this would redirect to the video meeting
-    // For now, we'll simulate joining with a loading state
+    
+    // Find the session that matches the ID
+    const session = sessions?.find(s => s.id === sessionId);
+    
+    if (session?.meetingLink) {
+      // Format the Google Meet URL correctly if needed
+      let meetingUrl = session.meetingLink;
+      if (!meetingUrl.startsWith('http')) {
+        // Handle just the meeting code
+        if (meetingUrl.includes('meet.google.com')) {
+          // The URL might already contain the domain but no protocol
+          meetingUrl = `https://${meetingUrl}`;
+        } else {
+          // It's likely just the meeting code
+          meetingUrl = `https://meet.google.com/${meetingUrl}`;
+        }
+      }
+      
+      // Open in a new tab
+      window.open(meetingUrl, "_blank");
+    }
+    
+    // Reset the loading state after a delay
     setTimeout(() => {
       setMeetingId(null);
-    }, 2000);
+    }, 1500);
   };
 
   // Get participant details based on user role
   const getParticipantDetails = (session: Session) => {
     if (user?.role === "mentee") {
+      // For mentees, show the mentor's details
       const mentor = mentors?.find(m => m.id === session.mentorId);
       return {
         id: mentor?.id || 0,
@@ -54,11 +78,11 @@ export default function UpcomingSessions() {
         color: "bg-primary-light",
       };
     } else {
-      // If user is a mentor, we would need to fetch mentee details
-      // For simplicity, let's return placeholder data
+      // For mentors, we would typically fetch mentee details from an API endpoint
+      // We'll use a query later to fetch user details, but for now, use placeholder
       return {
         id: session.menteeId,
-        name: "Mentee", // In a real app, you'd fetch the mentee's name
+        name: "Mentee", // This would be replaced with actual mentee name
         initials: "ME",
         profileImage: null,
         color: "bg-purple-500",
@@ -92,7 +116,7 @@ export default function UpcomingSessions() {
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold">Upcoming Sessions</h2>
-        <a href="#" className="text-sm text-primary hover:text-primary-dark">View all</a>
+        <a href="/my-sessions" className="text-sm text-primary hover:text-primary-dark">View all</a>
       </div>
       
       {sessions && sessions.length > 0 ? (
