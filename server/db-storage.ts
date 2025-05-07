@@ -125,8 +125,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSessionsForUser(userId: number, role: "mentor" | "mentee"): Promise<Session[]> {
+    // Use strict filtering based on user's role
     const column = role === "mentor" ? sessions.mentorId : sessions.menteeId;
     
+    // Get only sessions specifically assigned to this user based on their role
     return await db
       .select()
       .from(sessions)
@@ -135,9 +137,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUpcomingSessions(userId: number, role: "mentor" | "mentee"): Promise<Session[]> {
+    // Make sure to filter strictly by role - mentor or mentee
     const column = role === "mentor" ? sessions.mentorId : sessions.menteeId;
     const today = new Date().toISOString().split('T')[0];
     
+    // Only get sessions that are assigned to this specific user in their role
     return await db
       .select()
       .from(sessions)
@@ -152,12 +156,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingSessionRequests(mentorId: number): Promise<Session[]> {
+    // Strictly filter for the specific mentor's pending session requests only
     return await db
       .select()
       .from(sessions)
       .where(
         and(
-          eq(sessions.mentorId, mentorId),
+          eq(sessions.mentorId, mentorId),  // Only get pending requests for this specific mentor
           eq(sessions.status, "pending")
         )
       )

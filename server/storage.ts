@@ -152,6 +152,8 @@ export class MemStorage implements IStorage {
   }
 
   async getSessionsForUser(userId: number, role: "mentor" | "mentee"): Promise<Session[]> {
+    // Strictly filter sessions based on the user's role
+    // Return only sessions specifically assigned to this user in their role
     return Array.from(this.sessions.values()).filter(
       session => role === "mentor" ? session.mentorId === userId : session.menteeId === userId
     );
@@ -161,9 +163,11 @@ export class MemStorage implements IStorage {
     const today = new Date();
     return Array.from(this.sessions.values())
       .filter(session => {
+        // Strictly filter by the user's role - either mentor or mentee
         const isUserSession = role === "mentor" ? session.mentorId === userId : session.menteeId === userId;
         const sessionDate = new Date(`${session.date}T${session.time}`);
-        return isUserSession && sessionDate >= today && (session.status === "approved" || session.status === "pending");
+        // Only return approved sessions that are upcoming
+        return isUserSession && sessionDate >= today && session.status === "approved";
       })
       .sort((a, b) => {
         const dateA = new Date(`${a.date}T${a.time}`);
@@ -176,6 +180,7 @@ export class MemStorage implements IStorage {
     const today = new Date();
     return Array.from(this.sessions.values())
       .filter(session => {
+        // Strictly filter for the specific mentor's pending requests
         const sessionDate = new Date(`${session.date}T${session.time}`);
         return session.mentorId === mentorId && 
                sessionDate >= today && 
