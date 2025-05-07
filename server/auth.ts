@@ -105,12 +105,14 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
+        console.error("Authentication error:", err);
         return next(err);
       }
       
       if (!user) {
+        console.log("Login failed: Invalid credentials");
         return res.status(401).json({ 
           message: "Invalid username or password" 
         });
@@ -118,8 +120,10 @@ export function setupAuth(app: Express) {
       
       req.login(user, (loginErr) => {
         if (loginErr) {
+          console.error("Login session error:", loginErr);
           return next(loginErr);
         }
+        console.log(`User logged in successfully: ${user.username}, ${user.id}`);
         return res.status(200).json(user);
       });
     })(req, res, next);
