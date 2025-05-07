@@ -21,7 +21,7 @@ function StatsCard({ icon, title, value, footer, color }: StatsCardProps) {
           <p className="text-neutral text-sm">{title}</p>
           <p className="text-2xl font-semibold mt-1">{value}</p>
         </div>
-        <div className={`p-2 ${color} rounded-md`}>
+        <div className={`p-3 ${color} rounded-md flex items-center justify-center`}>
           {icon}
         </div>
       </div>
@@ -43,7 +43,7 @@ export default function StatsOverview() {
     queryKey: ["/api/sessions"],
   });
 
-  const { data: feedback, isLoading: feedbackLoading } = useQuery({
+  const { data: feedback, isLoading: feedbackLoading } = useQuery<any[]>({
     queryKey: ["/api/feedback"],
   });
 
@@ -54,8 +54,8 @@ export default function StatsOverview() {
 
   // Calculate stats
   const upcomingSessionsCount = upcomingSessions?.length || 0;
-  const totalHours = sessions?.length * 1 || 0; // Assuming 1 hour per session
-  const activeMentorsCount = user?.role === "mentee" ? mentors?.length || 0 : 0;
+  const totalHours = (sessions && Array.isArray(sessions) ? sessions.length : 0) * 1; // Assuming 1 hour per session
+  const activeMentorsCount = user?.role === "mentee" ? (mentors && Array.isArray(mentors) ? mentors.length : 0) : 0;
   
   // Calculate average rating
   let avgRating = 0;
@@ -74,7 +74,7 @@ export default function StatsOverview() {
                 <Skeleton className="h-4 w-20 mb-2" />
                 <Skeleton className="h-8 w-10" />
               </div>
-              <Skeleton className="h-10 w-10 rounded-md" />
+              <Skeleton className="h-12 w-12 rounded-md" />
             </div>
             <div className="mt-4">
               <Skeleton className="h-4 w-24" />
@@ -88,14 +88,14 @@ export default function StatsOverview() {
   return (
     <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
       <StatsCard
-        icon={<CalendarDays className="h-5 w-5 text-primary" />}
+        icon={<CalendarDays className="h-6 w-6 text-blue-600" />}
         title="Upcoming Sessions"
         value={upcomingSessionsCount}
         footer={<Link href="/my-sessions"><a className="text-sm text-primary">View schedule →</a></Link>}
         color="bg-blue-100"
       />
       <StatsCard
-        icon={<Clock className="h-5 w-5 text-secondary" />}
+        icon={<Clock className="h-6 w-6 text-green-600" />}
         title="Total Hours"
         value={totalHours}
         footer={<p className="text-sm text-neutral">{Math.floor(totalHours / 2)} hours this month</p>}
@@ -103,7 +103,7 @@ export default function StatsOverview() {
       />
       {user?.role === "mentee" ? (
         <StatsCard
-          icon={<Users className="h-5 w-5 text-purple-600" />}
+          icon={<Users className="h-6 w-6 text-purple-600" />}
           title="Active Mentors"
           value={activeMentorsCount}
           footer={<Link href="/find-mentors"><a className="text-sm text-primary">Manage connections →</a></Link>}
@@ -111,7 +111,7 @@ export default function StatsOverview() {
         />
       ) : (
         <StatsCard
-          icon={<Users className="h-5 w-5 text-purple-600" />}
+          icon={<Users className="h-6 w-6 text-purple-600" />}
           title="Active Mentees"
           value={upcomingSessionsCount > 0 ? upcomingSessionsCount : 0}
           footer={<p className="text-sm text-neutral">Mentees you're guiding</p>}
@@ -119,10 +119,10 @@ export default function StatsOverview() {
         />
       )}
       <StatsCard
-        icon={<Star className="h-5 w-5 text-accent" />}
+        icon={<Star className="h-6 w-6 text-amber-500" />}
         title="Feedback Score"
         value={avgRating ? `${avgRating}/5` : "No ratings"}
-        footer={<p className="text-sm text-neutral">Based on {feedback?.length || 0} sessions</p>}
+        footer={<p className="text-sm text-neutral">Based on {feedback && Array.isArray(feedback) ? feedback.length : 0} sessions</p>}
         color="bg-amber-100"
       />
     </section>
