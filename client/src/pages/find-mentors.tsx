@@ -53,8 +53,8 @@ export default function FindMentors() {
         <Header />
         <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-12">
-            <h1 className="text-2xl font-bold mb-4">Mentor View</h1>
-            <p className="mb-8">As a mentor, you don't need to find other mentors.</p>
+            <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
+            <p className="mb-8">This page is only accessible to mentees. As a mentor, you provide mentorship rather than seeking it.</p>
             <Button onClick={() => window.location.href = "/"}>Return to Dashboard</Button>
           </div>
         </main>

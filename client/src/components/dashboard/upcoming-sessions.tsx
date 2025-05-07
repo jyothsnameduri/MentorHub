@@ -135,9 +135,16 @@ export default function UpcomingSessions() {
       ) : (
         <div className="py-8 text-center">
           <p className="text-neutral">No upcoming sessions scheduled.</p>
-          <Button className="mt-4" asChild>
-            <a href="/find-mentors">Find a mentor</a>
-          </Button>
+          {user?.role === "mentee" && (
+            <Button className="mt-4" asChild>
+              <a href="/find-mentors">Find a mentor</a>
+            </Button>
+          )}
+          {user?.role === "mentor" && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Mentees will be able to book sessions based on your availability.
+            </p>
+          )}
         </div>
       )}
     </div>

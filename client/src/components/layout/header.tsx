@@ -41,11 +41,13 @@ export default function Header() {
                 Dashboard
               </div>
             </Link>
-            <Link href="/find-mentors">
-              <div className={`text-neutral-default ${location === '/find-mentors' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
-                Find Mentors
-              </div>
-            </Link>
+            {user?.role === "mentee" && (
+              <Link href="/find-mentors">
+                <div className={`text-neutral-default ${location === '/find-mentors' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
+                  Find Mentors
+                </div>
+              </Link>
+            )}
             <Link href="/my-sessions">
               <div className={`text-neutral-default ${location === '/my-sessions' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
                 My Sessions
