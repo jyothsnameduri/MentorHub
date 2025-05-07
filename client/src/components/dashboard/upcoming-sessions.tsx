@@ -25,12 +25,33 @@ export default function UpcomingSessions() {
   
   // For mentors viewing mentee details
   const uniqueMenteeIds = sessions?.map(s => s.menteeId).filter((v, i, a) => a.indexOf(v) === i) || [];
-  const menteeQueries = uniqueMenteeIds.map(id => 
-    useQuery<User>({
-      queryKey: ["/api/profile", id],
-      enabled: user?.role === "mentor" && !!id,
-    })
-  );
+  
+  // Use a custom hook to fetch mentee data
+  const { data: menteesData } = useQuery<Record<number, User>>({
+    queryKey: ["/api/profile/batch", uniqueMenteeIds],
+    enabled: user?.role === "mentor" && uniqueMenteeIds.length > 0,
+    queryFn: async () => {
+      // Create an object to store mentee data by ID
+      const menteeMap: Record<number, User> = {};
+      
+      // Fetch each mentee in parallel
+      await Promise.all(
+        uniqueMenteeIds.map(async (id) => {
+          try {
+            const response = await fetch(`/api/profile/${id}`);
+            if (response.ok) {
+              const data = await response.json();
+              menteeMap[id] = data;
+            }
+          } catch (error) {
+            console.error(`Error fetching mentee ${id}:`, error);
+          }
+        })
+      );
+      
+      return menteeMap;
+    }
+  });
 
   const formatSessionDate = (date: string, time: string) => {
     const fullDate = parseISO(`${date}T${time}`);
@@ -87,12 +108,8 @@ export default function UpcomingSessions() {
         color: "bg-primary-light",
       };
     } else {
-      // For mentors, get the mentee details from our queries
-      const menteeQuery = menteeQueries.find(query => 
-        query.data?.id === session.menteeId
-      );
-      
-      const mentee = menteeQuery?.data;
+      // For mentors, get the mentee details from our data object
+      const mentee = menteesData?.[session.menteeId];
       
       if (mentee) {
         return {
