@@ -203,7 +203,12 @@ export default function SessionCard({ session }: SessionCardProps) {
     }
   };
 
-  const participantName = participant 
+  // For privacy reasons, we only show the full name of the other participant if:
+  // 1. We have completed the session already (post-session)
+  // 2. The user is the owner of the session
+  const shouldShowFullName = isOwnSession && session.status === "completed";
+  
+  const participantName = shouldShowFullName && participant 
     ? `${participant.firstName} ${participant.lastName}`
     : `${isMentor ? 'Mentee' : 'Mentor'}`;
 

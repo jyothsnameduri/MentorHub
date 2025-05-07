@@ -95,10 +95,15 @@ export default function UpcomingSessions() {
     }, 1500);
   };
 
-  // Get participant details based on user role
+  // Get participant details based on user role and privacy requirements
   const getParticipantDetails = (session: Session) => {
+    // For privacy reasons, we follow these rules:
+    // 1. Full mentee names should only be visible after completed sessions
+    // 2. Mentor details can be visible to maintain mentor discovery
+    const isSessionCompleted = session.status === "completed";
+    
     if (user?.role === "mentee") {
-      // For mentees, show the mentor's details
+      // For mentees, show the mentor's details (mentors have public profiles)
       const mentor = mentors?.find(m => m.id === session.mentorId);
       return {
         id: mentor?.id || 0,
@@ -108,23 +113,33 @@ export default function UpcomingSessions() {
         color: "bg-primary-light",
       };
     } else {
-      // For mentors, get the mentee details from our data object
+      // For mentors, get the mentee details but apply privacy rules
       const mentee = menteesData?.[session.menteeId];
       
       if (mentee) {
+        // Only show full name if the session is completed
+        const name = isSessionCompleted ? 
+          `${mentee.firstName} ${mentee.lastName}` : 
+          "Mentee";
+          
+        const initials = isSessionCompleted ? 
+          `${mentee.firstName[0]}${mentee.lastName[0]}` : 
+          "ME";
+          
         return {
           id: mentee.id,
-          name: `${mentee.firstName} ${mentee.lastName}`,
-          initials: `${mentee.firstName[0]}${mentee.lastName[0]}`,
-          profileImage: mentee.profileImage,
+          name: name,
+          initials: initials,
+          // Only show profile image for completed sessions
+          profileImage: isSessionCompleted ? mentee.profileImage : null,
           color: "bg-purple-500",
         };
       } else {
         // Fallback if mentee data is not loaded yet
         return {
           id: session.menteeId,
-          name: "Loading...",
-          initials: "...",
+          name: "Mentee",
+          initials: "ME",
           profileImage: null,
           color: "bg-purple-500",
         };
