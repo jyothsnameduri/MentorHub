@@ -15,13 +15,22 @@ export default function UpcomingSessions() {
   // Get only sessions for the current user's role (mentor/mentee)
   // The backend API filters based on user ID and role
   const { data: sessions, isLoading } = useQuery<Session[]>({
-    queryKey: ["/api/sessions/upcoming"],
+    queryKey: ["/api/sessions/upcoming"]
   });
   
   const { data: mentors, isLoading: mentorsLoading } = useQuery<User[]>({
     queryKey: ["/api/mentors"],
     enabled: user?.role === "mentee",
   });
+  
+  // For mentors viewing mentee details
+  const uniqueMenteeIds = sessions?.map(s => s.menteeId).filter((v, i, a) => a.indexOf(v) === i) || [];
+  const menteeQueries = uniqueMenteeIds.map(id => 
+    useQuery<User>({
+      queryKey: ["/api/profile", id],
+      enabled: user?.role === "mentor" && !!id,
+    })
+  );
 
   const formatSessionDate = (date: string, time: string) => {
     const fullDate = parseISO(`${date}T${time}`);
@@ -78,15 +87,31 @@ export default function UpcomingSessions() {
         color: "bg-primary-light",
       };
     } else {
-      // For mentors, we would typically fetch mentee details from an API endpoint
-      // We'll use a query later to fetch user details, but for now, use placeholder
-      return {
-        id: session.menteeId,
-        name: "Mentee", // This would be replaced with actual mentee name
-        initials: "ME",
-        profileImage: null,
-        color: "bg-purple-500",
-      };
+      // For mentors, get the mentee details from our queries
+      const menteeQuery = menteeQueries.find(query => 
+        query.data?.id === session.menteeId
+      );
+      
+      const mentee = menteeQuery?.data;
+      
+      if (mentee) {
+        return {
+          id: mentee.id,
+          name: `${mentee.firstName} ${mentee.lastName}`,
+          initials: `${mentee.firstName[0]}${mentee.lastName[0]}`,
+          profileImage: mentee.profileImage,
+          color: "bg-purple-500",
+        };
+      } else {
+        // Fallback if mentee data is not loaded yet
+        return {
+          id: session.menteeId,
+          name: "Loading...",
+          initials: "...",
+          profileImage: null,
+          color: "bg-purple-500",
+        };
+      }
     }
   };
 
@@ -131,7 +156,14 @@ export default function UpcomingSessions() {
                 </Avatar>
               </div>
               <div className="sm:ml-4 flex-grow">
-                <p className="font-medium">{participant.name}</p>
+                <div className="flex items-center">
+                  <p className="font-medium">{participant.name}</p>
+                  {session.status === "pending" && (
+                    <span className="ml-2 inline-flex items-center rounded-full border border-orange-400 bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
+                      Pending
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-neutral">{session.topic}</p>
                 <div className="flex items-center mt-1 text-xs text-neutral">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -139,19 +171,29 @@ export default function UpcomingSessions() {
                 </div>
               </div>
               <div className="mt-3 sm:mt-0">
-                <Button 
-                  onClick={() => handleJoinSession(session.id)}
-                  disabled={meetingId === session.id}
-                >
-                  {meetingId === session.id ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Joining...
-                    </>
-                  ) : (
-                    "Join"
-                  )}
-                </Button>
+                {session.status === "approved" ? (
+                  <Button 
+                    onClick={() => handleJoinSession(session.id)}
+                    disabled={meetingId === session.id}
+                  >
+                    {meetingId === session.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Joining...
+                      </>
+                    ) : (
+                      "Join"
+                    )}
+                  </Button>
+                ) : session.status === "pending" ? (
+                  <Button variant="outline" disabled>
+                    Pending
+                  </Button>
+                ) : (
+                  <Button disabled>
+                    Join
+                  </Button>
+                )}
               </div>
             </div>
           );

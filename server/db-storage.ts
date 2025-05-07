@@ -141,14 +141,20 @@ export class DatabaseStorage implements IStorage {
     const column = role === "mentor" ? sessions.mentorId : sessions.menteeId;
     const today = new Date().toISOString().split('T')[0];
     
-    // Only get sessions that are assigned to this specific user in their role
+    // For mentors, include both approved and pending sessions
+    // For mentees, only include approved sessions
+    const statusCondition = role === "mentor" 
+      ? sql`${sessions.status} IN ('approved', 'pending')`
+      : eq(sessions.status, "approved");
+    
+    // Get sessions that are assigned to this specific user in their role
     return await db
       .select()
       .from(sessions)
       .where(
         and(
           eq(column, userId),
-          eq(sessions.status, "approved"),
+          statusCondition,
           sql`${sessions.date} >= ${today}`
         )
       )
