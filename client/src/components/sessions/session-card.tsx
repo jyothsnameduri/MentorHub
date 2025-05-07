@@ -47,13 +47,31 @@ export default function SessionCard({ session }: SessionCardProps) {
       const res = await apiRequest("PUT", `/api/sessions/${id}`, { status });
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sessions/upcoming"] });
-      toast({
-        title: "Session updated",
-        description: "The session status has been updated successfully.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      
+      // Show appropriate toast messages based on the new status
+      if (variables.status === "completed") {
+        toast({
+          title: "Session marked as completed",
+          description: isMentor 
+            ? "Mentee will now be able to leave feedback." 
+            : "The mentor has ended this session. Please leave your feedback.",
+        });
+      } else if (variables.status === "canceled") {
+        toast({
+          title: "Session canceled",
+          description: "The session has been canceled successfully.",
+        });
+      } else {
+        toast({
+          title: `Session ${variables.status}`,
+          description: `The session has been ${variables.status} successfully.`,
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -75,8 +93,10 @@ export default function SessionCard({ session }: SessionCardProps) {
         title: "Feedback submitted",
         description: "Thank you for your feedback!",
       });
-      // Mark the session as completed
-      updateSessionMutation.mutate({ id: session.id, status: "completed" });
+      
+      // If the user is a mentee, we don't need to change the session status
+      // since the mentor has already marked it as completed
+      queryClient.invalidateQueries({ queryKey: ["/api/feedback"] });
     },
     onError: (error) => {
       toast({
@@ -202,6 +222,14 @@ export default function SessionCard({ session }: SessionCardProps) {
                   <Video className="w-4 h-4 mr-2" />
                   Join Meeting
                 </Button>
+                {isMentor && (
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => updateSessionMutation.mutate({ id: session.id, status: "completed" })}
+                  >
+                    End Session
+                  </Button>
+                )}
                 <Button variant="outline" onClick={handleCancel}>Cancel</Button>
               </>
             )}
@@ -216,7 +244,19 @@ export default function SessionCard({ session }: SessionCardProps) {
               </div>
             )}
             {session.status === "completed" && !showFeedbackModal && (
-              <Button variant="outline" onClick={handleLeaveFeedback}>Leave Feedback</Button>
+              <>
+                <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md border border-green-200 mb-2">
+                  Session completed
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleLeaveFeedback}
+                  className="w-full"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  Leave Feedback
+                </Button>
+              </>
             )}
           </div>
         </div>
