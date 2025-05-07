@@ -97,7 +97,7 @@ export default function BookingModal({ mentor, isOpen, onClose }: BookingModalPr
   return (
     <>
       <Dialog open={isOpen && !showSuccessModal} onOpenChange={onClose}>
-        <DialogContent className="max-w-md mx-4 md:mx-auto">
+        <DialogContent className="max-w-md mx-4 md:mx-auto max-h-[90vh] overflow-y-auto pb-6">
           <DialogHeader>
             <DialogTitle>Book a Session</DialogTitle>
           </DialogHeader>
@@ -186,7 +186,7 @@ export default function BookingModal({ mentor, isOpen, onClose }: BookingModalPr
             />
           </div>
           
-          <div className="flex justify-between">
+          <div className="flex justify-between mt-6 pt-4 border-t border-neutral-lighter sticky bottom-0 bg-white">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
