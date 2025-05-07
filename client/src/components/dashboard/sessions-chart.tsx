@@ -19,6 +19,7 @@ export default function SessionsChart() {
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions"],
   });
+  console.log("Sessions for chart:", sessions);
   
   // Generate data for the last 6 weeks
   const generateWeeklyData = () => {
@@ -46,8 +47,10 @@ export default function SessionsChart() {
     
     // Count sessions for each week
     sessions.forEach(session => {
-      const sessionDate = parseISO(`${session.date}T${session.time}`);
-      
+      // Parse session date and time as local time
+      const [year, month, day] = session.date.split('-').map(Number);
+      const [hour, minute] = session.time.split(':').map(Number);
+      const sessionDate = new Date(year, month - 1, day, hour, minute);
       // Find which week this session belongs to
       const weekIndex = weeksData.findIndex(weekData => 
         isWithinInterval(sessionDate, { 
@@ -55,7 +58,6 @@ export default function SessionsChart() {
           end: weekData.interval.end 
         })
       );
-      
       if (weekIndex >= 0) {
         weeksData[weekIndex].sessions += 1;
       }

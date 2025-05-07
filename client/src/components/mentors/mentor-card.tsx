@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Star } from "lucide-react";
 import BookingModal from "./booking-modal";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface MentorCardProps {
   mentor: User;
@@ -20,10 +22,21 @@ export default function MentorCard({ mentor }: MentorCardProps) {
   const closeModal = () => {
     setShowModal(false);
   };
-  
-  // Generate random rating for demo purposes - in a real app, this would come from your backend
-  const rating = (Math.floor(Math.random() * 15) + 35) / 10; // Random rating between 3.5 and 5.0
-  const reviewCount = Math.floor(Math.random() * 30) + 5; // Random review count between 5 and 35
+
+  // Fetch real feedback for this mentor
+  const { data: feedback, isLoading: feedbackLoading } = useQuery({
+    queryKey: ["/api/mentors", mentor.id, "feedback"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/mentors/${mentor.id}/feedback`);
+      return await res.json();
+    },
+    enabled: !!mentor.id,
+  });
+  console.log("Feedback for mentor", mentor.id, feedback);
+
+  // Calculate average rating and review count
+  const reviewCount = feedback?.length || 0;
+  const rating = reviewCount > 0 ? (feedback.reduce((sum: number, f: any) => sum + (f.rating || 0), 0) / reviewCount).toFixed(1) : "-";
   
   return (
     <>
@@ -44,11 +57,13 @@ export default function MentorCard({ mentor }: MentorCardProps) {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-3 w-3 ${i < Math.floor(rating) ? "fill-accent text-accent" : "text-gray-300"}`}
+                      className={`h-3 w-3 ${i < Math.round(rating) ? "fill-accent text-accent" : "text-gray-300"}`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-muted-foreground">{rating} ({reviewCount} reviews)</span>
+                <span className="text-xs text-muted-foreground">
+                  {feedbackLoading ? "Loading..." : `${rating} (${reviewCount} review${reviewCount === 1 ? "" : "s"})`}
+                </span>
               </div>
             </div>
           </div>

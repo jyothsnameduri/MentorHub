@@ -26,16 +26,23 @@ export default function FindMentors() {
     queryKey: ["/api/mentors"],
   });
 
-  // Filter mentors based on search query
-  const filteredMentors = mentors?.filter(mentor => 
-    mentor.role === "mentor" && (
-      mentor.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mentor.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (mentor.title && mentor.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (mentor.organization && mentor.organization.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (mentor.bio && mentor.bio.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-  );
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredMentors = mentors?.filter(mentor => {
+    if (mentor.role !== "mentor") return false;
+
+    // Combine all searchable fields
+    const fields = [
+      mentor.firstName,
+      mentor.lastName,
+      mentor.title || "",
+      mentor.organization || "",
+      mentor.bio || "",
+      ...(Array.isArray(mentor.specialties) ? mentor.specialties : [])
+    ].join(" ").toLowerCase();
+
+    return fields.includes(normalizedQuery);
+  });
 
   // Sort mentors
   const sortedMentors = [...(filteredMentors || [])].sort((a, b) => {

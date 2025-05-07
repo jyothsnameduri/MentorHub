@@ -586,6 +586,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mentor feedback endpoint
+  app.get("/api/mentors/:id/feedback", isAuthenticated, async (req, res) => {
+    try {
+      const mentorId = parseInt(req.params.id);
+      const feedback = await storage.getFeedbackForUser(mentorId);
+      console.log("[DEBUG] Mentor feedback endpoint:", { mentorId, feedback });
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get mentor feedback" });
+    }
+  });
+
   // Create a server
   const httpServer = createServer(app);
 

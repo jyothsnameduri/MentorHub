@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { User, InsertSession, insertSessionSchema } from "@shared/schema";
-import { format, addDays, parseISO } from "date-fns";
+import { format, addDays, parseISO, getDay } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import SuccessModal from "./success-modal";
@@ -30,15 +30,66 @@ export default function BookingModal({ mentor, isOpen, onClose }: BookingModalPr
   const [notes, setNotes] = useState<string>("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
-  // Generate random availability times for the selected date
-  // In a real app, this would come from your backend API
-  const getAvailableTimes = () => {
-    const times = ["09:00", "11:30", "14:00", "15:30", "17:00"];
-    // Use the date to seed a consistent but random-looking pattern
-    const dateSeed = selectedDate ? selectedDate.getDate() : 0;
-    return times.filter((_, i) => (i + dateSeed) % 3 !== 0);
+  // Fetch mentor's availability
+  const { data: availability } = useQuery({
+    queryKey: ["/api/mentors", mentor.id, "availability"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/mentors/${mentor.id}/availability`);
+      return await res.json();
+    },
+    enabled: !!mentor.id && isOpen,
+  });
+
+  // Fetch mentor's sessions for the selected date
+  const { data: sessions } = useQuery({
+    queryKey: ["/api/sessions", mentor.id, selectedDate && format(selectedDate, "yyyy-MM-dd")],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/sessions");
+      return await res.json();
+    },
+    enabled: !!mentor.id && !!selectedDate && isOpen,
+  });
+
+  // Helper to get day name from date
+  const getDayName = (date: Date) => {
+    return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][getDay(date)];
   };
-  
+
+  // Helper to generate 30-minute intervals between two times ("HH:mm")
+  function generateIntervals(start: string, end: string) {
+    const intervals = [];
+    let [hour, minute] = start.split(":").map(Number);
+    const [endHour, endMinute] = end.split(":").map(Number);
+    while (hour < endHour || (hour === endHour && minute < endMinute)) {
+      intervals.push(`${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`);
+      minute += 30;
+      if (minute >= 60) {
+        minute = 0;
+        hour += 1;
+      }
+    }
+    return intervals;
+  }
+
+  // Compute available times for the selected date
+  const getAvailableTimes = () => {
+    if (!selectedDate || !availability) return [];
+    const dayName = getDayName(selectedDate);
+    // Get all slots for this day
+    const slots = availability.filter((slot: any) => slot.day.toLowerCase() === dayName.toLowerCase());
+    // Generate all 30-min intervals for all slots
+    let allIntervals: string[] = [];
+    slots.forEach((slot: any) => {
+      allIntervals = allIntervals.concat(generateIntervals(slot.startTime, slot.endTime));
+    });
+    // Get booked times for this mentor on this date
+    const bookedTimes = (sessions || [])
+      .filter((s: any) => s.mentorId === mentor.id && s.date === format(selectedDate, "yyyy-MM-dd"))
+      .map((s: any) => s.time);
+    // Return only intervals not already booked
+    return allIntervals.filter((time: string) => !bookedTimes.includes(time));
+  };
+
   const availableTimes = getAvailableTimes();
   
   const bookSessionMutation = useMutation({
