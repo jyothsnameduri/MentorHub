@@ -165,21 +165,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveSessionRequest(sessionId: number): Promise<Session | undefined> {
-    // Generate a Google Meet link with a more memorable format
+    // Use a simple static mocked meeting URL instead of generating one
     const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
     if (!session) return undefined;
     
-    // Get mentor and mentee names for the meeting code
-    const [mentor] = await db.select().from(users).where(eq(users.id, session.mentorId));
-    const [mentee] = await db.select().from(users).where(eq(users.id, session.menteeId));
+    // Create a mocked, consistent meeting link - no need to generate a unique one
+    const meetingLink = "https://meet.google.com/mentormatch-session";
     
-    // Format: mentor-mentee-YYYYMMDD-XXXX
-    const datePart = session.date.replace(/-/g, '');
-    const meetCodeBase = `${mentor?.firstName?.toLowerCase() || 'mentor'}-${mentee?.firstName?.toLowerCase() || 'mentee'}-${datePart}`;
-    // Ensure the code is not too long for Google Meet's requirements
-    const meetCode = `${meetCodeBase}-${Math.random().toString(36).substring(2, 6)}`.substring(0, 15);
-    const meetingLink = `https://meet.google.com/${meetCode}`;
-    
+    // Update the session with the mocked meeting link
     const [updatedSession] = await db
       .update(sessions)
       .set({
