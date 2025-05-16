@@ -1,18 +1,14 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import ProfileForm from "@/components/profile/profile-form";
-import AvailabilityCalendar from "@/components/profile/availability-calendar";
-import FeedbackHistory from "@/components/profile/feedback-history";
 import { Helmet } from "react-helmet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Profile() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("details");
+
   
   const getInitials = (firstName?: string, lastName?: string) => {
     if (!firstName || !lastName) return "U";
@@ -22,14 +18,14 @@ export default function Profile() {
   return (
     <>
       <Helmet>
-        <title>My Profile | MentorMatch</title>
-        <meta name="description" content="Manage your profile details and availability settings on MentorMatch." />
+        <title>My Profile | MentorHub</title>
+        <meta name="description" content="Manage your profile details and availability settings on MentorHub." />
       </Helmet>
 
       <div className="flex flex-col min-h-screen">
         <Header />
         
-        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light">
+        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row gap-6 mb-8">
               <div className="flex-shrink-0 flex items-center justify-center md:justify-start">
@@ -54,59 +50,17 @@ export default function Profile() {
               </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="details">Profile Details</TabsTrigger>
-                {user?.role === "mentor" && (
-                  <TabsTrigger value="availability">Availability</TabsTrigger>
-                )}
-                <TabsTrigger value="feedback">Feedback</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="details">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>
-                      Update your personal information and how others see you on the platform.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ProfileForm />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              {user?.role === "mentor" && (
-                <TabsContent value="availability">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Manage Availability</CardTitle>
-                      <CardDescription>
-                        Set your weekly availability for mentorship sessions.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <AvailabilityCalendar />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              )}
-              
-              <TabsContent value="feedback">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Feedback History</CardTitle>
-                    <CardDescription>
-                      View feedback received from previous mentorship sessions.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <FeedbackHistory />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>
+                  Update your personal information and how others see you on the platform.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProfileForm />
+              </CardContent>
+            </Card>
           </div>
         </main>
         

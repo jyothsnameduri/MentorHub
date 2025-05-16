@@ -9,8 +9,11 @@ import Dashboard from "@/pages/dashboard";
 import FindMentors from "@/pages/find-mentors";
 import MySessions from "@/pages/my-sessions";
 import Profile from "@/pages/profile";
+import Availability from "@/pages/availability";
+import Feedback from "@/pages/feedback";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 function Router() {
   return (
@@ -19,6 +22,8 @@ function Router() {
       <ProtectedRoute path="/find-mentors" component={FindMentors} />
       <ProtectedRoute path="/my-sessions" component={MySessions} />
       <ProtectedRoute path="/profile" component={Profile} />
+      <ProtectedRoute path="/availability" component={Availability} />
+      <ProtectedRoute path="/feedback" component={Feedback} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
@@ -27,14 +32,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

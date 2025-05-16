@@ -9,7 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, UserCircle2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
@@ -27,60 +29,79 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white dark:bg-gray-900 shadow-md border-b border-primary/20 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <Link href="/">
-              <span className="text-primary font-bold text-xl cursor-pointer">MentorMatch</span>
+              <span className="text-primary font-bold text-xl cursor-pointer drop-shadow-sm">MentorHub</span>
             </Link>
           </div>
-          <nav className="hidden md:ml-10 md:flex space-x-8">
+          <nav className="hidden md:ml-10 md:flex space-x-6">
             <Link href="/">
-              <div className={`text-neutral-default ${location === '/' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
+              <div className={`px-3 py-2 rounded-md font-medium cursor-pointer transition-all duration-200 ${location === '/' 
+                ? 'bg-primary text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                : 'text-foreground/80 hover:text-primary hover:bg-primary/10'}`}>
                 Dashboard
               </div>
             </Link>
             {user?.role === "mentee" && (
               <Link href="/find-mentors">
-                <div className={`text-neutral-default ${location === '/find-mentors' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
+                <div className={`px-3 py-2 rounded-md font-medium cursor-pointer transition-all duration-200 ${location === '/find-mentors' 
+                  ? 'bg-primary text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                  : 'text-foreground/80 hover:text-primary hover:bg-primary/10'}`}>
                   Find Mentors
                 </div>
               </Link>
             )}
             <Link href="/my-sessions">
-              <div className={`text-neutral-default ${location === '/my-sessions' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
+              <div className={`px-3 py-2 rounded-md font-medium cursor-pointer transition-all duration-200 ${location === '/my-sessions' 
+                ? 'bg-primary text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                : 'text-foreground/80 hover:text-primary hover:bg-primary/10'}`}>
                 My Sessions
               </div>
             </Link>
+
             {user?.role === 'mentor' && (
-              <Link href="/profile">
-                <div className={`text-neutral-default ${location === '/profile' ? 'border-b-2 border-primary' : 'hover:text-neutral-dark'} px-1 pt-1 font-medium cursor-pointer`}>
-                  My Profile
+              <Link href="/availability">
+                <div className={`px-3 py-2 rounded-md font-medium cursor-pointer transition-all duration-200 ${location === '/availability' 
+                  ? 'bg-primary text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                  : 'text-foreground/80 hover:text-primary hover:bg-primary/10'}`}>
+                  Availability
                 </div>
               </Link>
             )}
+            <Link href="/feedback">
+              <div className={`px-3 py-2 rounded-md font-medium cursor-pointer transition-all duration-200 ${location === '/feedback' 
+                ? 'bg-primary text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]' 
+                : 'text-foreground/80 hover:text-primary hover:bg-primary/10'}`}>
+                Feedback
+              </div>
+            </Link>
           </nav>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Button variant="ghost" className="rounded-full" size="icon">
-              <Bell className="h-5 w-5 text-neutral" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-            </Button>
-          </div>
+          <ThemeToggle />
           <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                  <Avatar className="h-full w-full">
                     <AvatarImage src={user?.profileImage || undefined} alt={user?.firstName || 'User'} />
-                    <AvatarFallback>{getInitials(`${user?.firstName} ${user?.lastName}`)}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
+                      <UserCircle2 className="h-5 w-5" />
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <AvatarImage src={user?.profileImage || undefined} alt={user?.firstName || 'User'} />
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white">
+                      <UserCircle2 className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium">{user?.firstName} {user?.lastName}</p>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
@@ -104,7 +125,7 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <span className="ml-2 font-medium text-sm hidden md:block">
+            <span className="ml-2 font-medium text-sm hidden md:block text-gray-800 dark:text-gray-200">
               {user?.firstName} {user?.lastName}
             </span>
           </div>

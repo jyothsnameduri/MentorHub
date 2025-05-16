@@ -1,36 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Session } from "@shared/schema";
 import { Link } from "wouter";
-import { CalendarDays, Clock, Users, Star } from "lucide-react";
+import { CalendarDays, Clock, Users, Star, Award } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GlowingStatCard } from "./glowing-stat-card";
 
-interface StatsCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  footer: React.ReactNode;
-  color: string;
-}
-
-function StatsCard({ icon, title, value, footer, color }: StatsCardProps) {
-  return (
-    <div className="bg-white p-5 rounded-lg shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-neutral text-sm">{title}</p>
-          <p className="text-2xl font-semibold mt-1">{value}</p>
-        </div>
-        <div className={`p-3 ${color} rounded-md flex items-center justify-center`}>
-          {icon}
-        </div>
-      </div>
-      <div className="mt-4">
-        {footer}
-      </div>
-    </div>
-  );
-}
+// Old StatsCard component is replaced by GlowingStatCard
 
 export default function StatsOverview() {
   const { user } = useAuth();
@@ -66,9 +42,10 @@ export default function StatsOverview() {
 
   if (sessionsLoading || allSessionsLoading || feedbackLoading || (user?.role === "mentee" && mentorsLoading)) {
     return (
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white p-5 rounded-lg shadow-sm">
+          <div key={i} className="bg-card dark:bg-gray-800/50 p-6 rounded-lg shadow-sm border border-border/40">
+
             <div className="flex items-start justify-between">
               <div>
                 <Skeleton className="h-4 w-20 mb-2" />
@@ -86,44 +63,44 @@ export default function StatsOverview() {
   }
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <StatsCard
-        icon={<CalendarDays className="h-6 w-6 text-blue-600" />}
+    <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <GlowingStatCard
+        icon={<CalendarDays className="h-6 w-6" />}
         title="Upcoming Sessions"
         value={upcomingSessionsCount}
-        footer={<Link href="/my-sessions"><a className="text-sm text-primary">View schedule →</a></Link>}
-        color="bg-blue-100"
+        footer={<Link href="/my-sessions"><a className="text-sm hover:underline">View schedule →</a></Link>}
+        color="blue"
       />
-      <StatsCard
-        icon={<Clock className="h-6 w-6 text-green-600" />}
+      <GlowingStatCard
+        icon={<Clock className="h-6 w-6" />}
         title="Total Hours"
         value={totalHours}
-        footer={<p className="text-sm text-neutral">{Math.floor(totalHours / 2)} hours this month</p>}
-        color="bg-green-100"
+        footer={<p className="text-sm">{Math.floor(totalHours / 2)} hours this month</p>}
+        color="green"
       />
       {user?.role === "mentee" ? (
-        <StatsCard
-          icon={<Users className="h-6 w-6 text-purple-600" />}
+        <GlowingStatCard
+          icon={<Users className="h-6 w-6" />}
           title="Active Mentors"
           value={activeMentorsCount}
-          footer={<Link href="/find-mentors"><a className="text-sm text-primary">Manage connections →</a></Link>}
-          color="bg-purple-100"
+          footer={<Link href="/find-mentors"><a className="text-sm hover:underline">Manage connections →</a></Link>}
+          color="purple"
         />
       ) : (
-        <StatsCard
-          icon={<Users className="h-6 w-6 text-purple-600" />}
+        <GlowingStatCard
+          icon={<Users className="h-6 w-6" />}
           title="Active Mentees"
           value={upcomingSessionsCount > 0 ? upcomingSessionsCount : 0}
-          footer={<p className="text-sm text-neutral">Mentees you're guiding</p>}
-          color="bg-purple-100"
+          footer={<p className="text-sm">Mentees you're guiding</p>}
+          color="purple"
         />
       )}
-      <StatsCard
-        icon={<Star className="h-6 w-6 text-amber-500" />}
+      <GlowingStatCard
+        icon={<Star className="h-6 w-6" />}
         title="Feedback Score"
         value={avgRating ? `${avgRating}/5` : "No ratings"}
-        footer={<p className="text-sm text-neutral">Based on {feedback && Array.isArray(feedback) ? feedback.length : 0} sessions</p>}
-        color="bg-amber-100"
+        footer={<p className="text-sm">Based on {feedback && Array.isArray(feedback) ? feedback.length : 0} sessions</p>}
+        color="amber"
       />
     </section>
   );

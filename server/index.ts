@@ -124,10 +124,9 @@ async function seedTestUsers() {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // Use the PORT environment variable provided by Render or default to 5001
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5001;
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });

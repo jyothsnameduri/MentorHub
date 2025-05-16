@@ -1,7 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Session, User, Feedback, insertFeedbackSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Calendar, Video, Star } from "lucide-react";
+import { Calendar, Video, Star, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,6 +18,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 interface SessionCardProps {
   session: Session;
@@ -58,7 +61,7 @@ export default function SessionCard({ session }: SessionCardProps) {
       const res = await apiRequest("PUT", `/api/sessions/${id}`, { status });
       return await res.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_: any, variables: { id: number; status: string }) => {
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sessions/upcoming"] });
@@ -84,7 +87,7 @@ export default function SessionCard({ session }: SessionCardProps) {
         });
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to update session",
         description: error.message,
@@ -110,7 +113,7 @@ export default function SessionCard({ session }: SessionCardProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/feedback/given"] });
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Failed to submit feedback",
         description: error.message,
@@ -190,16 +193,67 @@ export default function SessionCard({ session }: SessionCardProps) {
   const getStatusBadgeStyle = () => {
     switch (session.status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/50";
       case "approved":
-        return "bg-blue-100 text-blue-800";
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800/50";
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/50";
       case "canceled":
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/50";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 dark:bg-gray-800/50 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700";
+    }
+  };
+  
+  // Get gradient background based on status
+  const getGradientBackground = () => {
+    switch (session.status) {
+      case "pending":
+        return "from-yellow-500/10 to-amber-600/5";
+      case "approved":
+        return "from-blue-500/10 to-indigo-600/5";
+      case "completed":
+        return "from-green-500/10 to-emerald-600/5";
+      case "canceled":
+      case "rejected":
+        return "from-red-500/10 to-rose-600/5";
+      default:
+        return "from-gray-500/10 to-slate-600/5";
+    }
+  };
+  
+  // Get shadow color based on status
+  const getShadowStyle = () => {
+    switch (session.status) {
+      case "pending":
+        return "shadow-[0_0_20px_rgba(245,158,11,0.15)]";
+      case "approved":
+        return "shadow-[0_0_20px_rgba(59,130,246,0.15)]";
+      case "completed":
+        return "shadow-[0_0_20px_rgba(34,197,94,0.15)]";
+      case "canceled":
+      case "rejected":
+        return "shadow-[0_0_20px_rgba(239,68,68,0.15)]";
+      default:
+        return "shadow-sm";
+    }
+  };
+  
+  // Get border color based on status
+  const getBorderStyle = () => {
+    switch (session.status) {
+      case "pending":
+        return "border-yellow-200 dark:border-yellow-800/30";
+      case "approved":
+        return "border-blue-200 dark:border-blue-800/30";
+      case "completed":
+        return "border-green-200 dark:border-green-800/30";
+      case "canceled":
+      case "rejected":
+        return "border-red-200 dark:border-red-800/30";
+      default:
+        return "border-gray-200 dark:border-gray-700/50";
     }
   };
 
@@ -214,85 +268,76 @@ export default function SessionCard({ session }: SessionCardProps) {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
-        <div className="flex flex-col md:flex-row justify-between">
-          <div className="flex-grow mb-4 md:mb-0">
-            <div className="flex items-center mb-3">
-              <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeStyle()}`}>
-                {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-              </span>
+      <div className="relative rounded-xl overflow-hidden mb-4">
+        <div className={`absolute inset-0 bg-gradient-to-br ${getGradientBackground()} opacity-30`} />
+        
+        <div className="relative">
+          <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl ${getShadowStyle()} border ${getBorderStyle()}`}>
+            <div className="absolute inset-0">
+              <GlowingEffect
+                spread={40}
+                glow={true}
+                disabled={false}
+                proximity={64}
+                inactiveZone={0.01}
+                borderWidth={2}
+              />
             </div>
-            <h3 className="text-lg font-semibold mb-2">{session.topic}</h3>
-            <div className="flex items-center text-neutral-500 mb-1">
-              <Calendar className="h-4 w-4 mr-2" />
-              <span className="text-sm">{formatDate(session.date, session.time)}</span>
-            </div>
-            <div className="flex items-center text-neutral-500">
-              <Video className="h-4 w-4 mr-2" />
-              <span className="text-sm">Video meeting with {participantName}</span>
-            </div>
-            {session.notes && (
-              <p className="mt-3 text-sm bg-neutral-50 p-3 rounded-md border border-neutral-200">
-                <span className="font-medium">Session notes:</span> {session.notes}
-              </p>
-            )}
-          </div>
-          
-          <div className="flex flex-col space-y-2 md:ml-4 md:w-36">
-            {session.status === "approved" && (
-              <>
-                <Button 
-                  onClick={handleJoinSession}
-                  className="flex items-center justify-center"
-                  disabled={!session.meetingLink}
-                >
-                  <Video className="w-4 h-4 mr-2" />
-                  Join Meeting
-                </Button>
-                {isMentor && session.mentorId === user?.id && (
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => updateSessionMutation.mutate({ id: session.id, status: "completed" })}
-                  >
-                    End Session
-                  </Button>
-                )}
-                {(session.mentorId === user?.id || session.menteeId === user?.id) && (
-                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                )}
-              </>
-            )}
-            {session.status === "pending" && (
-              <div className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                Awaiting approval from {isMentor ? "you" : "mentor"}
-              </div>
-            )}
-            {session.status === "rejected" && (
-              <div className="text-sm text-red-700 bg-red-50 p-3 rounded-md border border-red-200">
-                Request declined
-              </div>
-            )}
-            {session.status === "completed" && !showFeedbackModal && (
-              <>
-                <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md border border-green-200 mb-2">
-                  Session completed
-                </div>
-                {hasLeftFeedback ? (
-                  <div className="text-sm text-blue-700 bg-blue-50 p-3 rounded-md border border-blue-200">
-                    Feedback provided
+            
+            <div className="p-6 relative z-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex-grow mb-4 md:mb-0">
+                  <div className="flex items-center mb-3">
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeStyle()}`}>
+                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                    </span>
                   </div>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    onClick={handleLeaveFeedback}
-                    className="w-full"
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    Leave Feedback
-                  </Button>
-                )}
-              </>
-            )}
+                  <h3 className="text-lg font-semibold mb-2">{session.topic}</h3>
+                  <div className="flex items-center text-neutral-500 mb-1">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <span className="text-sm">{formatDate(session.date, session.time)}</span>
+                  </div>
+                  <div className="flex items-center text-neutral-500">
+                    <Video className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Video meeting with {participantName}</span>
+                  </div>
+                  {session.notes && (
+                    <p className="mt-3 text-sm bg-neutral-50 p-3 rounded-md border border-neutral-200">
+                      <span className="font-medium">Session notes:</span> {session.notes}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex flex-col space-y-2 md:ml-4 md:w-36">
+                  {session.status === "approved" && (
+                    <div className="mt-5 flex flex-col sm:flex-row gap-2">
+                      <Button 
+                        onClick={handleJoinSession} 
+                        className="sm:flex-1 bg-primary/90 hover:bg-primary text-white shadow-md hover:shadow-lg transition-all duration-300"
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Join Session
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCancel}
+                        className="sm:flex-1 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                  {/* Only show cancel button for sessions that are not already completed or canceled */}
+                  {(session.mentorId === user?.id || session.menteeId === user?.id) && 
+                   session.status !== "completed" && 
+                   session.status !== "canceled" && 
+                   session.status !== "rejected" && (
+                    <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -306,42 +351,52 @@ export default function SessionCard({ session }: SessionCardProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mb-4">
-            <div className="flex items-center justify-center mb-2">
-              {participant && (
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={participant.profileImage || undefined} alt={participantName} />
-                  <AvatarFallback>{participant.firstName?.[0]}{participant.lastName?.[0]}</AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-            <h3 className="text-center font-medium">{participantName}</h3>
-            <p className="text-center text-sm text-neutral-500 mb-4">{session.topic}</p>
-            
-            <div className="flex justify-center gap-1 mb-4">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRating(value)}
-                  className="focus:outline-none"
-                >
-                  <Star
-                    className={`h-8 w-8 ${
-                      value <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                    }`}
-                  />
-                </button>
-              ))}
+          <div className="flex-1">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                {participant && (
+                  <Avatar className="h-12 w-12 ring-2 ring-primary/20 dark:ring-primary/10">
+                    <AvatarImage src={participant.profileImage || undefined} alt={participantName} />
+                    <AvatarFallback className="bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary/90">
+                      {participant.firstName?.[0]}{participant.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground dark:text-white text-lg">{participantName}</h3>
+                <p className="text-sm text-neutral dark:text-gray-300">{session.topic}</p>
+              </div>
             </div>
             
-            <Textarea
-              placeholder="Share your thoughts about the session..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
-              className="mb-4"
-            />
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center">
+                <div className="p-2 rounded-full bg-primary/10 dark:bg-primary/20 mr-3">
+                  <Calendar className="h-4 w-4 text-primary dark:text-primary/90" />
+                </div>
+                <span className="text-sm text-foreground dark:text-white/90">
+                  {formatDate(session.date, session.time)}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <div className="p-2 rounded-full bg-primary/10 dark:bg-primary/20 mr-3">
+                  <Video className="h-4 w-4 text-primary dark:text-primary/90" />
+                </div>
+                <span className="text-sm text-foreground dark:text-white/90">
+                  {session.meetingLink ? "Video Meeting" : "No meeting link yet"}
+                </span>
+              </div>
+            </div>
+            
+            <div className="mt-5">
+              <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeStyle()}`}>
+                {session.status === "pending" && <Clock className="h-3 w-3 mr-1.5" />}
+                {session.status === "approved" && <CheckCircle2 className="h-3 w-3 mr-1.5" />}
+                {session.status === "completed" && <CheckCircle2 className="h-3 w-3 mr-1.5" />}
+                {(session.status === "canceled" || session.status === "rejected") && <XCircle className="h-3 w-3 mr-1.5" />}
+                {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+              </div>
+            </div>
             
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowFeedbackModal(false)}>

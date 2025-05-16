@@ -1,49 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-      --background: 0 0% 100%;
---foreground: 20 14.3% 4.1%;
---muted: 60 4.8% 95.9%;
---muted-foreground: 25 5.3% 44.7%;
---popover: 0 0% 100%;
---popover-foreground: 20 14.3% 4.1%;
---card: 0 0% 100%;
---card-foreground: 20 14.3% 4.1%;
---border: 20 5.9% 90%;
---input: 20 5.9% 90%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 60 4.8% 95.9%;
---secondary-foreground: 24 9.8% 10%;
---accent: 60 4.8% 95.9%;
---accent-foreground: 24 9.8% 10%;
---destructive: 0 84.2% 60.2%;
---destructive-foreground: 60 9.1% 97.8%;
---ring: 20 14.3% 4.1%;
+  /* Light Mode - Based on provided color palette */
+  --background: 210 40% 98%; /* #F8FAFC (off-white) */
+  --foreground: 222 47% 18%; /* #1E293B (dark slate) */
+  --muted: 217 33% 97%;
+  --muted-foreground: 215 16% 47%; /* #64748B (slate) */
+  --popover: 0 0% 100%; /* #FFFFFF (white) */
+  --popover-foreground: 222 47% 18%; /* #1E293B (dark slate) */
+  --card: 0 0% 100%; /* #FFFFFF (white) */
+  --card-foreground: 222 47% 18%; /* #1E293B (dark slate) */
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 217 91% 60%; /* #3B82F6 (vibrant blue) */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 158 64% 40%; /* #10B981 (emerald green) */
+  --secondary-foreground: 210 40% 98%;
+  --accent: 35 92% 50%; /* #F59E0B (amber) */
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%; /* #EF4444 (red) */
+  --destructive-foreground: 210 40% 98%;
+  --ring: 215 20% 65%;
 --radius: 0.5rem;
   }
+
   .dark {
-      --background: 240 10% 3.9%;
---foreground: 0 0% 98%;
---muted: 240 3.7% 15.9%;
---muted-foreground: 240 5% 64.9%;
---popover: 240 10% 3.9%;
---popover-foreground: 0 0% 98%;
---card: 240 10% 3.9%;
---card-foreground: 0 0% 98%;
---border: 240 3.7% 15.9%;
---input: 240 3.7% 15.9%;
---primary: 207 90% 54%;
---primary-foreground: 211 100% 99%;
---secondary: 240 3.7% 15.9%;
---secondary-foreground: 0 0% 98%;
---accent: 240 3.7% 15.9%;
---accent-foreground: 0 0% 98%;
---destructive: 0 62.8% 30.6%;
---destructive-foreground: 0 0% 98%;
---ring: 240 4.9% 83.9%;
+  /* Dark Mode - Based on provided color palette */
+  --background: 222 47% 11%; /* #0F172A (deep navy) */
+  --foreground: 210 40% 98%; /* #F1F5F9 (bright slate) */
+  --muted: 215 28% 17%;
+  --muted-foreground: 217 19% 65%; /* #94A3B8 (muted slate) */
+  --popover: 222 47% 11%; /* #0F172A (deep navy) */
+  --popover-foreground: 210 40% 98%; /* #F1F5F9 (bright slate) */
+  --card: 222 47% 18%; /* #1E293B (navy slate) */
+  --card-foreground: 210 40% 98%; /* #F1F5F9 (bright slate) */
+  --border: 215 28% 17%;
+  --input: 215 28% 17%;
+  --primary: 217 91% 67%; /* #60A5FA (lighter blue) */
+  --primary-foreground: 222 47% 11%;
+  --secondary: 158 84% 52%; /* #34D399 (lighter emerald) */
+  --secondary-foreground: 222 47% 11%;
+  --accent: 38 92% 57%; /* #FBBF24 (brighter amber) */
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 70%; /* #F87171 (lighter red) */
+  --destructive-foreground: 210 40% 98%;
+  --ring: 215 20% 65%;
 --radius: 0.5rem;
   }
 
@@ -53,6 +59,215 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-inter bg-background text-foreground antialiased;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-montserrat font-bold;
+  }
+}
+
+/* Typography classes */
+.font-montserrat {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-sf-pro {
+  font-family: 'SF Pro Display', sans-serif;
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appearZoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.animate-out {
+  animation: fadeIn 0.3s ease backwards reverse;
+}
+
+.fade-in-50 {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+.fade-out-0 {
+  animation: fadeIn 0.25s ease backwards reverse;
+}
+
+.animate-shake {
+  animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease forwards;
+}
+
+.animate-appear {
+  animation: appear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-appear-zoom {
+  animation: appearZoom 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.duration-250 {
+  animation-duration: 250ms;
+}
+
+/* Card hover animation - Based on provided animation guidelines */
+.hover\:shadow-xl {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.hover\:shadow-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Button ripple effect - Based on provided animation guidelines */
+.ripple {
+  position: relative;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.ripple:after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform .5s, opacity 1s;
+}
+
+.ripple:active:after {
+  transform: scale(0, 0);
+  opacity: .2;
+  transition: 0s;
+}
+
+.btn-click-effect:active {
+  transform: scale(0.98);
+  transition: transform 0.2s ease;
+}
+
+/* Page transitions - Based on provided animation guidelines */
+.page-transition-enter {
+  opacity: 0;
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transition: opacity 250ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 250ms;
+}
+
+/* Form field animations */
+.float-label {
+  transition: transform 0.2s, color 0.2s;
+}
+
+.float-label-active {
+  transform: translateY(-1.5rem) scale(0.85);
+}
+
+/* Tab indicator animation */
+.tab-indicator {
+  transition: transform 0.25s ease;
+}
+
+/* Stagger animation for lists/grids */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.stagger-item-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Status change transitions */
+.status-change {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.06) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

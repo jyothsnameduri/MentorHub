@@ -72,30 +72,49 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
 )
 
-const FormItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-  const id = React.useId()
+interface FormItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  floating?: boolean;
+}
 
-  return (
-    <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-2", className)} {...props} />
-    </FormItemContext.Provider>
-  )
-})
-FormItem.displayName = "FormItem"
+const FormItem = React.forwardRef<HTMLDivElement, FormItemProps>(
+  ({ className, floating = false, ...props }, ref) => {
+    const id = React.useId();
+
+    return (
+      <FormItemContext.Provider value={{ id }}>
+        <div 
+          ref={ref} 
+          className={cn(
+            "space-y-2", 
+            floating && "form-item relative",
+            className
+          )} 
+          {...props} 
+        />
+      </FormItemContext.Provider>
+    );
+  }
+);
+FormItem.displayName = "FormItem";
+
+interface FormLabelProps extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> {
+  floating?: boolean;
+}
 
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
-
+  FormLabelProps
+>(({ className, floating = false, ...props }, ref) => {
+  const { error, formItemId } = useFormField();
+  
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-destructive", className)}
+      className={cn(
+        error && "text-destructive",
+        floating && "float-label absolute top-3 left-3 bg-transparent z-10 origin-[0] pointer-events-none",
+        className
+      )}
       htmlFor={formItemId}
       {...props}
     />
@@ -103,12 +122,58 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
+interface FormControlProps extends React.ComponentPropsWithoutRef<typeof Slot> {
+  floatingLabel?: boolean;
+}
+
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
-
+  FormControlProps
+>(({ floatingLabel = false, ...props }, ref) => {
+  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [hasValue, setHasValue] = React.useState(false);
+  
+  // Handle focus and blur events to control the floating label animation
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    if (props.onFocus) {
+      props.onFocus(e);
+    }
+  };
+  
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
+    setHasValue(!!e.target.value);
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
+  };
+  
+  // Handle change event to track if the input has a value
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHasValue(!!e.target.value);
+    if (props.onChange) {
+      props.onChange(e);
+    }
+  };
+  
+  // Add float-label-active class to the label when input is focused or has value
+  React.useEffect(() => {
+    if (floatingLabel) {
+      const formItem = document.getElementById(formItemId)?.closest('.form-item');
+      const label = formItem?.querySelector('.float-label') as HTMLElement;
+      
+      if (label) {
+        if (isFocused || hasValue) {
+          label.classList.add('float-label-active');
+        } else {
+          label.classList.remove('float-label-active');
+        }
+      }
+    }
+  }, [isFocused, hasValue, floatingLabel, formItemId]);
+  
   return (
     <Slot
       ref={ref}
@@ -119,6 +184,13 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChange={handleChange}
+      className={cn(
+        error && "animate-shake border-destructive",
+        floatingLabel && "pt-6"
+      )}
       {...props}
     />
   )

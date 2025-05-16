@@ -58,7 +58,7 @@ export default function FindMentors() {
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light">
+        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-12">
             <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
             <p className="mb-8">This page is only accessible to mentees. As a mentor, you provide mentorship rather than seeking it.</p>
@@ -73,7 +73,7 @@ export default function FindMentors() {
   return (
     <>
       <Helmet>
-        <title>Find Mentors | MentorMatch</title>
+        <title>Find Mentors | MentorHub</title>
         <meta name="description" content="Browse and connect with professional mentors that match your career goals and interests." />
       </Helmet>
 
@@ -125,7 +125,7 @@ export default function FindMentors() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                 <h3 className="text-lg font-medium mb-2">No mentors found</h3>
                 <p className="text-neutral mb-6">
                   {searchQuery

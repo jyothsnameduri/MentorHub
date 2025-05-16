@@ -208,45 +208,52 @@ export default function AvailabilityCalendar() {
 
   return (
     <>
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Your Weekly Availability</h2>
-          <Button onClick={() => setIsAddingSlot(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Add Time Slot
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-foreground dark:text-white">Your Weekly Availability</h3>
+          <Button 
+            onClick={() => setIsAddingSlot(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Time Slot
           </Button>
         </div>
         
         {isLoading ? (
-          <Skeleton className="h-64 w-full" />
+          <div className="py-8 text-center">
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+            <p className="text-blue-600 dark:text-blue-400 font-medium">Loading your availability...</p>
+          </div>
         ) : sortedAvailability.length > 0 ? (
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/3">Day</TableHead>
-                  <TableHead className="w-1/3">Time</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+            <Table className="border-collapse border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
+                <TableRow className="hover:bg-gray-100/50 dark:hover:bg-gray-800/70">
+                  <TableHead className="text-gray-700 dark:text-gray-300 font-medium">Day</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-300 font-medium">Time</TableHead>
+                  <TableHead className="text-right text-gray-700 dark:text-gray-300 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedAvailability.map((slot) => (
-                  <TableRow key={slot.id}>
-                    <TableCell className="font-medium">{slot.day}</TableCell>
-                    <TableCell>
-                      {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                  <TableRow key={slot.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 border-b border-gray-200 dark:border-gray-700">
+                    <TableCell className="font-medium text-gray-800 dark:text-gray-200">{slot.day}</TableCell>
+                    <TableCell className="text-gray-700 dark:text-gray-300">
+                      <span className="inline-flex items-center">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                        {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => deleteAvailabilityMutation.mutate(slot.id)}
                         disabled={deleteAvailabilityMutation.isPending}
+                        className="hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
                       >
-                        {deleteAvailabilityMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        )}
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -255,32 +262,44 @@ export default function AvailabilityCalendar() {
             </Table>
           </div>
         ) : (
-          <div className="p-8 text-center bg-neutral-50 border border-neutral-200 rounded-lg">
-            <p className="text-neutral mb-4">
+          <div className="p-8 text-center bg-neutral-50 dark:bg-gray-800/50 rounded-md border border-neutral-200 dark:border-gray-700">
+            <p className="text-neutral dark:text-gray-300 mb-4">
               You haven't set any availability slots yet. Add time slots to let mentees book sessions with you.
             </p>
-            <Button onClick={() => setIsAddingSlot(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Add Your First Time Slot
+            <Button 
+              onClick={() => setIsAddingSlot(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add Time Slot
             </Button>
           </div>
         )}
         
-        <div className="mt-6 p-4 bg-neutral-50 rounded-md border border-neutral-200">
-          <h3 className="text-sm font-medium mb-2">How it works:</h3>
-          <ul className="text-sm text-neutral-600 space-y-1 list-disc pl-5">
-            <li>Add weekly recurring time slots when you're available for mentorship sessions</li>
-            <li>Mentees will only be able to book sessions during your available time slots</li>
-            <li>You'll receive notifications when sessions are booked</li>
-            <li>You can remove or adjust your availability at any time</li>
-          </ul>
+        <div className="relative rounded-xl overflow-hidden mt-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-blue-600/5 opacity-30" />
+          
+          <div className="relative">
+            <div className="p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.2)] border border-indigo-200 dark:border-indigo-800/30">
+              <h3 className="text-sm font-medium mb-3 text-gray-800 dark:text-white flex items-center">
+                <span>How it works:</span>
+                <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              </h3>
+              <ul className="list-disc pl-6 space-y-2.5 text-sm text-gray-600 dark:text-gray-300">
+                <li>Add weekly recurring time slots when you're available for mentorship sessions</li>
+                <li>Mentees will only be able to book sessions during your available time slots</li>
+                <li>You'll receive notifications when sessions are booked</li>
+                <li>You can remove or adjust your availability at any time</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
       
       <Dialog open={isAddingSlot} onOpenChange={setIsAddingSlot}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle>Add Availability</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-gray-900 dark:text-white">Add Availability</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-300">
               Add a recurring weekly time slot when you're available for mentorship sessions.
             </DialogDescription>
           </DialogHeader>
@@ -363,10 +382,19 @@ export default function AvailabilityCalendar() {
               </div>
               
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" type="button" onClick={() => setIsAddingSlot(false)}>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => setIsAddingSlot(false)}
+                  className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={addAvailabilityMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={addAvailabilityMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
                   {addAvailabilityMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
