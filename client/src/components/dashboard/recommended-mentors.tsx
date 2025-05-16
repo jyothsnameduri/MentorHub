@@ -31,22 +31,22 @@ export default function RecommendedMentors() {
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800/90 rounded-lg shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700/50">
         <div className="flex justify-between items-center mb-6">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-6 w-48 bg-gray-200 dark:bg-gray-700" />
+          <Skeleton className="h-4 w-16 bg-gray-200 dark:bg-gray-700" />
         </div>
-        <Skeleton className="w-full h-40 rounded-lg mb-4" />
+        <Skeleton className="w-full h-40 rounded-lg mb-4 bg-gray-200 dark:bg-gray-700" />
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex items-center border-b border-gray-200 pb-4 last:border-0">
-              <Skeleton className="h-10 w-10 rounded-full" />
+            <div key={i} className="flex items-center border-b border-gray-200 dark:border-gray-700/50 pb-4 last:border-0">
+              <Skeleton className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
               <div className="ml-3">
-                <Skeleton className="h-4 w-32 mb-1" />
-                <Skeleton className="h-3 w-48" />
+                <Skeleton className="h-4 w-32 mb-1 bg-gray-200 dark:bg-gray-700" />
+                <Skeleton className="h-3 w-48 bg-gray-200 dark:bg-gray-700" />
               </div>
               <div className="ml-auto">
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16 bg-gray-200 dark:bg-gray-700" />
               </div>
             </div>
           ))}
@@ -61,10 +61,10 @@ export default function RecommendedMentors() {
   
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800/90 rounded-lg shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700/50">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Recommended Mentors</h2>
-          <a href="/find-mentors" className="text-sm text-primary hover:text-primary-dark">View all</a>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recommended Mentors</h2>
+          <a href="/find-mentors" className="text-sm text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary-lighter">View all</a>
         </div>
         
         <div className="mb-4 relative overflow-hidden rounded-lg">
@@ -82,20 +82,20 @@ export default function RecommendedMentors() {
         <div className="space-y-4">
           {recommendedMentors && recommendedMentors.length > 0 ? (
             recommendedMentors.map(mentor => (
-              <div key={mentor.id} className="flex items-center border-b border-gray-200 pb-4 last:border-0">
-                <Avatar className="h-10 w-10">
+              <div key={mentor.id} className="flex items-center border-b border-gray-200 dark:border-gray-700/50 pb-4 last:border-0">
+                <Avatar className="h-10 w-10 ring-2 ring-gray-100 dark:ring-gray-700/50">
                   <AvatarImage src={mentor.profileImage || undefined} alt={`${mentor.firstName} ${mentor.lastName}`} />
-                  <AvatarFallback>{mentor.firstName[0]}{mentor.lastName[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-primary-light/20 dark:bg-primary-dark/30 text-primary-dark dark:text-primary-light">{mentor.firstName[0]}{mentor.lastName[0]}</AvatarFallback>
                 </Avatar>
                 <div className="ml-3">
-                  <p className="font-medium text-sm">{mentor.firstName} {mentor.lastName}</p>
-                  <p className="text-xs text-neutral">{mentor.title} at {mentor.organization}</p>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white">{mentor.firstName} {mentor.lastName}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">{mentor.title} at {mentor.organization}</p>
                 </div>
                 <div className="ml-auto">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="bg-white border border-primary text-primary hover:bg-primary-light hover:text-white"
+                    className="bg-white dark:bg-transparent border border-primary dark:border-primary-light text-primary dark:text-primary-light hover:bg-primary-light dark:hover:bg-primary-dark/50 hover:text-white dark:hover:text-white"
                     onClick={() => handleConnectClick(mentor)}
                   >
                     Connect
@@ -104,7 +104,7 @@ export default function RecommendedMentors() {
               </div>
             ))
           ) : (
-            <p className="text-center text-neutral py-4">No recommended mentors available.</p>
+            <p className="text-center text-gray-600 dark:text-gray-300 py-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/30 my-2">No recommended mentors available.</p>
           )}
         </div>
       </div>

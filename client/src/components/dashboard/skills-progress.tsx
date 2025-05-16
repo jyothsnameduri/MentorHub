@@ -26,6 +26,8 @@ import { Slider } from "@/components/ui/slider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { cn } from "@/lib/utils";
 
 type SkillFormValues = z.infer<typeof insertSkillSchema>;
 
@@ -110,20 +112,20 @@ export default function SkillsProgress() {
   
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <Skeleton className="h-6 w-36 mb-4" />
+      <div className="bg-white dark:bg-gray-800/90 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700/50">
+        <Skeleton className="h-6 w-36 mb-4 bg-gray-200 dark:bg-gray-700" />
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <div key={i}>
               <div className="flex justify-between mb-1">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-24 bg-gray-200 dark:bg-gray-700" />
+                <Skeleton className="h-4 w-12 bg-gray-200 dark:bg-gray-700" />
               </div>
-              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700" />
             </div>
           ))}
         </div>
-        <Skeleton className="h-9 w-full mt-6" />
+        <Skeleton className="h-9 w-full mt-6 bg-gray-200 dark:bg-gray-700" />
       </div>
     );
   }
@@ -138,38 +140,53 @@ export default function SkillsProgress() {
   
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold mb-4">Skills Progress</h2>
+      <div className="relative bg-white dark:bg-gray-800/90 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700/50 overflow-hidden">
+        <div className="absolute inset-0">
+          <GlowingEffect
+            spread={40}
+            glow={true}
+            disabled={false}
+            proximity={64}
+            inactiveZone={0.01}
+            borderWidth={2}
+          />
+        </div>
         
-        {skills && skills.length > 0 ? (
-          <div className="space-y-4">
-            {skills.map((skill) => (
-              <div key={skill.id}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">{skill.name}</span>
-                  <span className="text-sm text-neutral">{skill.progress}%</span>
+        <div className="relative z-10">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Skills Progress</h2>
+          
+          {skills && skills.length > 0 ? (
+            <div className="space-y-4">
+              {skills.map((skill) => (
+                <div key={skill.id}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{skill.name}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{skill.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className={`${getColorClass(skill.progress)} h-2 rounded-full`}
+                      style={{ width: `${skill.progress}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`${getColorClass(skill.progress)} h-2 rounded-full`}
-                    style={{ width: `${skill.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-neutral py-4">No skills added yet. Add skills to track your progress.</p>
-        )}
-        
-        <Button
-          onClick={() => setIsAddingSkill(true)}
-          className="block w-full text-center mt-6"
-          variant="outline"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Skill
-        </Button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600 dark:text-gray-300 py-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/30 my-2">
+              No skills added yet. Add skills to track your progress.
+            </p>
+          )}
+          
+          <Button
+            onClick={() => setIsAddingSkill(true)}
+            className="block w-full text-center mt-6 bg-white dark:bg-gray-800 text-primary dark:text-primary-light border-primary/30 dark:border-primary-light/30 hover:bg-primary-light/10 dark:hover:bg-primary-dark/20"
+            variant="outline"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Skill
+          </Button>
+        </div>
       </div>
       
       <Dialog open={isAddingSkill} onOpenChange={setIsAddingSkill}>

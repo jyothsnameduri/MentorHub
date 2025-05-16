@@ -357,8 +357,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You don't have permission to update this session" });
       }
       
+      let updatedSession;
+      
+      // Special handling for approving a session - use approveSessionRequest to assign meeting link
+      if (req.body.status === "approved" && session.status !== "approved") {
+        console.log(`[DEBUG] Approving session ${sessionId} and assigning meeting link`);
+        if (userRole !== "mentor" || session.mentorId !== userId) {
+          return res.status(403).json({ 
+            message: "Only the assigned mentor can approve this session" 
+          });
+        }
+        
+        // Use the approveSessionRequest method which assigns a meeting link
+        updatedSession = await storage.approveSessionRequest(sessionId);
+        
+        // Get mentee details to create activity
+        const mentee = await storage.getUser(session.menteeId);
+        
+        // Create activity for both mentor and mentee
+        await storage.createActivity({
+          userId: userId,
+          type: "session_approved",
+          content: `You approved a session with ${mentee?.firstName} ${mentee?.lastName}`,
+          relatedUserId: session.menteeId
+        });
+        
+        await storage.createActivity({
+          userId: session.menteeId,
+          type: "session_approved",
+          content: `${req.user?.firstName} ${req.user?.lastName} approved your session request`,
+          relatedUserId: userId
+        });
+      }
       // Special handling for completing a session - only a mentor can mark as completed
-      if (req.body.status === "completed") {
+      else if (req.body.status === "completed") {
         if (userRole !== "mentor" || session.mentorId !== userId) {
           console.log(`Permission denied: User ${userId} (${userRole}) tried to complete session ${sessionId} created by mentor ${session.mentorId}`);
           return res.status(403).json({ 
@@ -383,11 +415,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: `${req.user?.firstName} ${req.user?.lastName} marked your session as completed. Please leave feedback!`,
           relatedUserId: userId
         });
+        
+        updatedSession = await storage.updateSession(sessionId, req.body);
+      }
+      // Handle all other status updates
+      else {
+        updatedSession = await storage.updateSession(sessionId, req.body);
       }
       
-      const updatedSession = await storage.updateSession(sessionId, req.body);
       res.json(updatedSession);
     } catch (error) {
+      console.error("Error updating session:", error);
       res.status(500).json({ message: "Failed to update session" });
     }
   });
@@ -484,9 +522,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const feedback = await storage.getFeedbackForUser(userId);
-      res.json(feedback);
+      // Get basic feedback data
+      const feedbackItems = await storage.getFeedbackForUser(userId);
+      
+      // Enhance feedback with session details and user profiles
+      const enhancedFeedback = [];
+      
+      for (const feedback of feedbackItems) {
+        // Get session details
+        const session = await storage.getSessionById(feedback.sessionId);
+        
+        // Get user profile of the feedback giver
+        const giver = await storage.getUser(feedback.fromId);
+        
+        // Add enhanced data
+        enhancedFeedback.push({
+          ...feedback,
+          session: session ? {
+            id: session.id,
+            topic: session.topic,
+            date: session.date,
+            time: session.time,
+            status: session.status
+          } : null,
+          giver: giver ? {
+            id: giver.id,
+            firstName: giver.firstName,
+            lastName: giver.lastName,
+            profileImage: giver.profileImage,
+            role: giver.role
+          } : null
+        });
+      }
+      
+      res.json(enhancedFeedback);
     } catch (error) {
+      console.error("Error fetching enhanced feedback:", error);
       res.status(500).json({ message: "Failed to get feedback" });
     }
   });
@@ -526,6 +597,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to check feedback status" });
+    }
+  });
+  
+  // Route to get all feedback for a specific session
+  app.get("/api/feedback/session/:sessionId/all", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ message: "Invalid session ID" });
+      }
+      
+      // Get the session to verify user is part of it
+      const session = await storage.getSessionById(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Verify user is part of the session
+      if (session.mentorId !== userId && session.menteeId !== userId) {
+        return res.status(403).json({ message: "You can only view feedback for sessions you participated in" });
+      }
+      
+      // Get all feedback for this session
+      const allFeedback = await storage.getFeedbackBySession(sessionId);
+      
+      // Get user profiles for the feedback givers
+      const userIds = Array.from(new Set(allFeedback.map((f: { fromId: number }) => f.fromId)));
+      const userProfiles: Record<number, any> = {};
+      
+      for (const id of userIds) {
+        const user = await storage.getUser(id);
+        if (user) {
+          userProfiles[id] = {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImage: user.profileImage,
+            role: user.role
+          };
+        }
+      }
+      
+      res.json({
+        feedback: allFeedback,
+        userProfiles
+      });
+    } catch (error) {
+      console.error("Error getting session feedback:", error);
+      res.status(500).json({ message: "Failed to get session feedback" });
     }
   });
 

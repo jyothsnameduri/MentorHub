@@ -176,34 +176,34 @@ export default function UpcomingSessions({ excludePending = false }: { excludePe
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div className="bg-white dark:bg-gray-800/90 rounded-lg shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700/50">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold">Upcoming Sessions</h2>
-        <a href="/my-sessions" className="text-sm text-primary hover:text-primary-dark">View all</a>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Sessions</h2>
+        <a href="/my-sessions" className="text-sm text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary-lighter">View all</a>
       </div>
       
       {filteredSessions && filteredSessions.length > 0 ? (
         filteredSessions.map(session => {
           const participant = getParticipantDetails(session);
           return (
-            <div key={session.id} className="flex flex-col sm:flex-row border-b border-gray-200 py-4 last:border-0 last:pb-0 first:pt-0 items-start sm:items-center">
+            <div key={session.id} className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700/50 py-4 last:border-0 last:pb-0 first:pt-0 items-start sm:items-center">
               <div className="sm:flex-shrink-0 mb-3 sm:mb-0">
-                <Avatar className="h-12 w-12">
+                <Avatar className="h-12 w-12 ring-2 ring-gray-100 dark:ring-gray-700/50">
                   <AvatarImage src={participant.profileImage || undefined} alt={participant.name} />
                   <AvatarFallback className={participant.color}>{participant.initials}</AvatarFallback>
                 </Avatar>
               </div>
               <div className="sm:ml-4 flex-grow">
                 <div className="flex items-center">
-                  <p className="font-medium">{participant.name}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{participant.name}</p>
                   {session.status === "pending" && (
-                    <span className="ml-2 inline-flex items-center rounded-full border border-orange-400 bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
+                    <span className="ml-2 inline-flex items-center rounded-full border border-orange-400 dark:border-orange-500/50 bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 text-xs font-semibold text-orange-600 dark:text-orange-300">
                       Pending
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-neutral">{session.topic}</p>
-                <div className="flex items-center mt-1 text-xs text-neutral">
+                <p className="text-sm text-gray-700 dark:text-gray-300">{session.topic}</p>
+                <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400">
                   <Calendar className="h-4 w-4 mr-1" />
                   <span>{formatSessionDate(session.date, session.time)}</span>
                 </div>
@@ -237,15 +237,15 @@ export default function UpcomingSessions({ excludePending = false }: { excludePe
           );
         })
       ) : (
-        <div className="py-8 text-center">
-          <p className="text-neutral">No upcoming sessions scheduled.</p>
+        <div className="py-8 text-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/30 my-2">
+          <p className="text-gray-600 dark:text-gray-300">No upcoming sessions scheduled.</p>
           {user?.role === "mentee" && (
-            <Button className="mt-4" asChild>
+            <Button className="mt-4 bg-primary hover:bg-primary-dark dark:bg-primary-dark dark:hover:bg-primary" asChild>
               <a href="/find-mentors">Find a mentor</a>
             </Button>
           )}
           {user?.role === "mentor" && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Mentees will be able to book sessions based on your availability.
             </p>
           )}

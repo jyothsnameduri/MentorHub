@@ -80,43 +80,43 @@ export default function FindMentors() {
       <div className="flex flex-col min-h-screen">
         <Header />
         
-        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light">
+        <main className="flex-grow pt-6 pb-16 md:pb-6 bg-neutral-light dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
               <div>
-                <h1 className="text-2xl font-bold text-neutral-default">Find Mentors</h1>
-                <p className="text-neutral mt-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Find Mentors</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
                   Browse and connect with mentors that match your interests.
                 </p>
               </div>
               
               <div className="mt-4 md:mt-0 w-full md:w-auto flex flex-col sm:flex-row gap-4">
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
                   <Input
                     placeholder="Search mentors..."
-                    className="pl-8"
+                    className="pl-8 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
                 
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Sort by Name</SelectItem>
-                    <SelectItem value="organization">Sort by Organization</SelectItem>
+                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <SelectItem value="name" className="text-gray-900 dark:text-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700">Sort by Name</SelectItem>
+                    <SelectItem value="organization" className="text-gray-900 dark:text-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700">Sort by Organization</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">Loading mentors...</span>
+              <div className="flex justify-center items-center py-12 bg-white dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700/50">
+                <Loader2 className="h-8 w-8 animate-spin text-primary dark:text-primary-light" />
+                <span className="ml-2 text-gray-700 dark:text-gray-300">Loading mentors...</span>
               </div>
             ) : sortedMentors && sortedMentors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -125,15 +125,20 @@ export default function FindMentors() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <h3 className="text-lg font-medium mb-2">No mentors found</h3>
-                <p className="text-neutral mb-6">
+              <div className="text-center py-12 bg-white dark:bg-gray-800/90 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700/50">
+                <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">No mentors found</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   {searchQuery
                     ? `No mentors match your search for "${searchQuery}"`
                     : "There are no mentors available at this time."}
                 </p>
                 {searchQuery && (
-                  <Button onClick={() => setSearchQuery("")}>Clear Search</Button>
+                  <Button 
+                    onClick={() => setSearchQuery("")}
+                    className="bg-primary hover:bg-primary-dark dark:bg-primary-dark dark:hover:bg-primary text-white"
+                  >
+                    Clear Search
+                  </Button>
                 )}
               </div>
             )}

@@ -1,24 +1,38 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import type { ThemeProviderProps } from "next-themes/dist/types";
+
+// Create a simple context for theme
+type ThemeContextType = {
+  theme: string;
+  setTheme: (theme: string) => void;
+};
+
+export const ThemeContext = createContext<ThemeContextType>({
+  theme: "light",
+  setTheme: () => null,
+});
+
+// Simple props type that doesn't try to match next-themes exactly
+type ThemeProviderProps = {
+  children: React.ReactNode;
+  [key: string]: any; // Allow any additional props to be passed through
+};
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+  // Client-side only code
   const [mounted, setMounted] = useState(false);
 
-  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Prevent theme flash by not rendering until client-side
-    return <>{children}</>;
+    // Return a simple wrapper when not mounted to avoid hydration issues
+    return <div className="theme-provider-loading">{children}</div>;
   }
 
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
-
-export const ThemeContext = createContext({ theme: "light", setTheme: (theme: string) => {} });
 
 export const useTheme = () => {
   return useContext(ThemeContext);

@@ -31,6 +31,35 @@ export default function SessionCard({ session }: SessionCardProps) {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  
+  // Define types for feedback data
+  interface FeedbackStatus {
+    hasFeedback: boolean;
+    feedback?: Feedback;
+  }
+  
+  interface SessionFeedbackData {
+    feedback: Feedback[];
+    userProfiles: Record<number, {
+      id: number;
+      firstName: string;
+      lastName: string;
+      profileImage?: string;
+      role: string;
+    }>;
+  }
+  
+  // Query to check if user has already provided feedback for this session
+  const { data: feedbackStatus } = useQuery<FeedbackStatus>({
+    queryKey: [`/api/feedback/session/${session.id}`],
+    enabled: !!session.id && session.status === "completed",
+  });
+  
+  // Query to get all feedback for this session (both from mentor and mentee)
+  const { data: sessionFeedback, refetch: refetchSessionFeedback } = useQuery<SessionFeedbackData>({
+    queryKey: [`/api/feedback/session/${session.id}/all`],
+    enabled: !!session.id && session.status === "completed",
+  });
 
   // Strictly verify session ownership based on user's role
   const isOwnSession = user?.role === "mentor" 
@@ -40,9 +69,18 @@ export default function SessionCard({ session }: SessionCardProps) {
   const isMentor = user?.role === "mentor";
   const participantId = isMentor ? session.menteeId : session.mentorId;
   
+  // Log the session data for debugging
+  console.log(`[DEBUG] Session data:`, {
+    id: session.id,
+    status: session.status,
+    meetingLink: session.meetingLink,
+    mentorId: session.mentorId,
+    menteeId: session.menteeId
+  });
+  
   const { data: participant } = useQuery<User>({
     queryKey: [`/api/profile/${participantId}`],
-    enabled: !!participantId && isOwnSession,
+    enabled: !!participantId,
   });
   
   // Check if the user has already provided feedback for this session
@@ -129,35 +167,104 @@ export default function SessionCard({ session }: SessionCardProps) {
   };
 
   const handleJoinSession = () => {
-    if (!session.meetingLink) {
+    // Log the session data for debugging
+    console.log('[JOIN MEETING] Session data:', {
+      id: session.id,
+      status: session.status,
+      meetingLink: session.meetingLink
+    });
+    
+    // Get the meeting link from the session or use a hardcoded fallback
+    let meetingLink = session.meetingLink;
+    
+    // Check if the session has a valid meeting link
+    if (!meetingLink || meetingLink.trim() === '') {
+      console.warn('[JOIN MEETING] No meeting link available for session:', session.id);
+      
+      // Use a hardcoded fallback link from our collection
+      meetingLink = 'https://meet.google.com/abc-defg-hij';
+      console.log('[JOIN MEETING] Using fallback meeting link:', meetingLink);
+      
       toast({
-        title: "No meeting link available",
-        description: "This session doesn't have a Google Meet link yet.",
+        title: "Using default meeting link",
+        description: "Opening a default Google Meet link since no specific link was assigned.",
+      });
+    } else {
+      console.log('[JOIN MEETING] Using session meeting link:', meetingLink);
+    }
+    
+    try {
+      // Format the Google Meet URL correctly if needed
+      let formattedUrl = meetingLink.trim();
+      
+      // Make sure we have a proper URL format
+      if (!formattedUrl.startsWith('http')) {
+        if (formattedUrl.includes('meet.google.com')) {
+          formattedUrl = `https://${formattedUrl}`;
+        } else {
+          formattedUrl = `https://meet.google.com/${formattedUrl}`;
+        }
+      }
+      
+      // Remove any trailing or leading whitespace
+      formattedUrl = formattedUrl.replace(/\s+/g, '');
+      
+      console.log('[JOIN MEETING] Opening URL:', formattedUrl);
+      
+      // Open in a new tab
+      const newWindow = window.open(formattedUrl, "_blank");
+      
+      // Check if the window was successfully opened
+      if (newWindow) {
+        toast({
+          title: "Joining meeting",
+          description: "Opening Google Meet in a new tab...",
+        });
+      } else {
+        // If window.open returns null, it might have been blocked by a popup blocker
+        console.error('[JOIN MEETING] Popup blocked');
+        toast({
+          title: "Popup blocked",
+          description: "Please allow popups for this site to join meetings.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('[JOIN MEETING] Error opening meeting link:', error);
+      toast({
+        title: "Error joining meeting",
+        description: "There was a problem opening the meeting link.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAccept = () => {
+    // Ensure the user is the mentor for this session
+    if (session.mentorId !== user?.id) {
+      toast({
+        title: "Permission Denied",
+        description: "Only the assigned mentor can accept session requests.",
         variant: "destructive"
       });
       return;
     }
     
-    // Debug log for the meeting link
-    console.log('Attempting to join meeting with link:', session.meetingLink);
-    
-    // Format the Google Meet URL correctly if needed
-    let meetingUrl = session.meetingLink.trim();
-    if (!meetingUrl.startsWith('http')) {
-      if (meetingUrl.includes('meet.google.com')) {
-        meetingUrl = `https://${meetingUrl}`;
-      } else {
-        meetingUrl = `https://meet.google.com/${meetingUrl}`;
-      }
+    updateSessionMutation.mutate({ id: session.id, status: "approved" });
+  };
+
+  const handleReject = () => {
+    // Ensure the user is the mentor for this session
+    if (session.mentorId !== user?.id) {
+      toast({
+        title: "Permission Denied",
+        description: "Only the assigned mentor can reject session requests.",
+        variant: "destructive"
+      });
+      return;
     }
-    // Remove any trailing or leading whitespace
-    meetingUrl = meetingUrl.replace(/\s+/g, '');
-    // Open in a new tab
-    window.open(meetingUrl, "_blank");
-    toast({
-      title: "Joining meeting",
-      description: "Opening Google Meet in a new tab...",
-    });
+    
+    updateSessionMutation.mutate({ id: session.id, status: "rejected" });
   };
 
   const handleCancel = () => {
@@ -257,12 +364,8 @@ export default function SessionCard({ session }: SessionCardProps) {
     }
   };
 
-  // For privacy reasons, we only show the full name of the other participant if:
-  // 1. We have completed the session already (post-session)
-  // 2. The user is the owner of the session
-  const shouldShowFullName = isOwnSession && session.status === "completed";
-  
-  const participantName = shouldShowFullName && participant 
+  // Always show the participant name when available
+  const participantName = participant 
     ? `${participant.firstName} ${participant.lastName}`
     : `${isMentor ? 'Mentee' : 'Mentor'}`;
 
@@ -309,30 +412,66 @@ export default function SessionCard({ session }: SessionCardProps) {
                 </div>
                 
                 <div className="flex flex-col space-y-2 md:ml-4 md:w-36">
-                  {session.status === "approved" && (
-                    <div className="mt-5 flex flex-col sm:flex-row gap-2">
+                  {/* Show accept/reject buttons for mentors with pending sessions */}
+                  {isMentor && session.mentorId === user?.id && session.status === "pending" && (
+                    <div className="flex flex-col space-y-4">
                       <Button 
-                        onClick={handleJoinSession} 
-                        className="sm:flex-1 bg-primary/90 hover:bg-primary text-white shadow-md hover:shadow-lg transition-all duration-300"
+                        className="w-full bg-green-700 hover:bg-green-800 text-white" 
+                        onClick={handleAccept}
                       >
-                        <Video className="h-4 w-4 mr-2" />
-                        Join Session
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Accept
                       </Button>
                       <Button 
-                        variant="outline" 
-                        onClick={handleCancel}
-                        className="sm:flex-1 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white" 
+                        onClick={handleReject}
                       >
                         <XCircle className="h-4 w-4 mr-2" />
-                        Cancel
+                        Reject
                       </Button>
                     </div>
                   )}
+                  
+                  {/* Show join meeting button for approved sessions */}
+                  {session.status === "approved" && (
+                    <Button 
+                      className="w-full sm:w-auto bg-blue-700 hover:bg-blue-800 text-white" 
+                      onClick={handleJoinSession}
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Join Meeting
+                    </Button>
+                  )}
+                  
+                  {/* Show complete button for approved sessions (only for mentors) */}
+                  {session.status === "approved" && session.mentorId === user?.id && (
+                    <Button 
+                      className="w-full sm:w-auto bg-green-700 hover:bg-green-800 text-white" 
+                      onClick={() => updateSessionMutation.mutate({ id: session.id, status: "completed" })}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Complete
+                    </Button>
+                  )}
+                  
+                  {/* Show feedback button for completed sessions (for both mentors and mentees) */}
+                  {session.status === "completed" && (session.mentorId === user?.id || session.menteeId === user?.id) && (
+                    <Button 
+                      className="w-full sm:w-auto bg-green-700 hover:bg-green-800 text-white" 
+                      onClick={handleLeaveFeedback}
+                      size="sm"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      {feedbackStatus?.hasFeedback ? "View Feedback" : "Leave Feedback"}
+                    </Button>
+                  )}
+                  
                   {/* Only show cancel button for sessions that are not already completed or canceled */}
                   {(session.mentorId === user?.id || session.menteeId === user?.id) && 
                    session.status !== "completed" && 
                    session.status !== "canceled" && 
-                   session.status !== "rejected" && (
+                   session.status !== "rejected" && 
+                   session.status !== "pending" && (
                     <Button variant="outline" onClick={handleCancel}>Cancel</Button>
                   )}
                 </div>
@@ -343,16 +482,19 @@ export default function SessionCard({ session }: SessionCardProps) {
       </div>
 
       <Dialog open={showFeedbackModal} onOpenChange={setShowFeedbackModal}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Leave Feedback</DialogTitle>
-            <DialogDescription>
-              Share your experience about the session with {participantName}
+            <DialogTitle className="text-center text-xl font-semibold">Session Feedback</DialogTitle>
+            <DialogDescription className="text-center">
+              {feedbackStatus?.hasFeedback 
+                ? "View and manage feedback for this session" 
+                : `Share your experience about the session with ${participantName}`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1">
-            <div className="flex items-start gap-4">
+            {/* Session participants */}
+            <div className="flex items-start gap-4 mb-6 p-4 bg-neutral-50 dark:bg-gray-800/50 rounded-lg">
               <div className="flex-shrink-0">
                 {participant && (
                   <Avatar className="h-12 w-12 ring-2 ring-primary/20 dark:ring-primary/10">
@@ -363,49 +505,121 @@ export default function SessionCard({ session }: SessionCardProps) {
                   </Avatar>
                 )}
               </div>
-              <div>
-                <h3 className="font-medium text-foreground dark:text-white text-lg">{participantName}</h3>
-                <p className="text-sm text-neutral dark:text-gray-300">{session.topic}</p>
+              
+              <div className="flex-1">
+                <h4 className="text-sm font-medium">{participantName}</h4>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  {participant?.role.charAt(0).toUpperCase() + participant?.role.slice(1)}
+                </p>
+                <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                  Session on {formatDate(session.date, session.time)}
+                </p>
               </div>
             </div>
             
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-primary/10 dark:bg-primary/20 mr-3">
-                  <Calendar className="h-4 w-4 text-primary dark:text-primary/90" />
+            {/* Existing feedback section */}
+            {sessionFeedback?.feedback && sessionFeedback.feedback.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-3">Feedback for this session:</h3>
+                <div className="space-y-4">
+                  {sessionFeedback.feedback.map((fb) => {
+                    // Use optional chaining and provide fallback for userProfiles
+                    const giver = sessionFeedback?.userProfiles?.[fb.fromId] || {
+                      firstName: 'User',
+                      lastName: '',
+                      profileImage: undefined
+                    };
+                    
+                    return (
+                      <div key={fb.id} className="p-4 border rounded-md bg-white dark:bg-gray-800 shadow-sm">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={giver.profileImage || undefined} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {giver.firstName?.[0]}{giver.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{giver.firstName} {giver.lastName}</p>
+                            <p className="text-xs text-neutral-500">{format(new Date(fb.created || new Date()), "MMM d, yyyy")}</p>
+                          </div>
+                          <div className="ml-auto flex">
+                            {[1, 2, 3, 4, 5].map((value) => (
+                              <Star 
+                                key={value}
+                                className={`h-4 w-4 ${value <= fb.rating ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300'}`} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {fb.comment && (
+                          <div className="text-sm mt-2 pl-11">
+                            {fb.comment}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className="text-sm text-foreground dark:text-white/90">
-                  {formatDate(session.date, session.time)}
-                </span>
               </div>
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-primary/10 dark:bg-primary/20 mr-3">
-                  <Video className="h-4 w-4 text-primary dark:text-primary/90" />
+            )}
+            
+            {/* Leave feedback form - only show if user hasn't left feedback yet */}
+            {!feedbackStatus?.hasFeedback && (
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Rating</label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        className={`p-1 rounded-full transition-colors ${value <= rating ? 'text-yellow-400' : 'text-neutral-300 dark:text-neutral-600'}`}
+                      >
+                        <Star className={`h-6 w-6 ${value <= rating ? 'fill-yellow-400' : ''}`} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <span className="text-sm text-foreground dark:text-white/90">
-                  {session.meetingLink ? "Video Meeting" : "No meeting link yet"}
-                </span>
+                
+                <div>
+                  <label htmlFor="feedback" className="block text-sm font-medium mb-2">Comments</label>
+                  <Textarea
+                    id="feedback"
+                    placeholder="Share your thoughts about the session..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+                
+                <div className="mt-6 flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowFeedbackModal(false)}>Cancel</Button>
+                  <Button 
+                    className="bg-green-700 hover:bg-green-800 text-white"
+                    onClick={submitFeedback}
+                    disabled={submitFeedbackMutation.isPending}
+                  >
+                    {submitFeedbackMutation.isPending ? "Submitting..." : "Submit Feedback"}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="mt-5">
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeStyle()}`}>
-                {session.status === "pending" && <Clock className="h-3 w-3 mr-1.5" />}
-                {session.status === "approved" && <CheckCircle2 className="h-3 w-3 mr-1.5" />}
-                {session.status === "completed" && <CheckCircle2 className="h-3 w-3 mr-1.5" />}
-                {(session.status === "canceled" || session.status === "rejected") && <XCircle className="h-3 w-3 mr-1.5" />}
-                {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            {/* If user has already left feedback, show a message */}
+            {feedbackStatus?.hasFeedback && !sessionFeedback?.feedback?.length && (
+              <div className="mt-6 p-4 border border-dashed rounded-md text-center">
+                <p className="text-neutral-500">You've already provided feedback for this session.</p>
               </div>
-            </div>
+            )}
             
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowFeedbackModal(false)}>
-                Cancel
-              </Button>
-              <Button onClick={submitFeedback} disabled={submitFeedbackMutation.isPending}>
-                {submitFeedbackMutation.isPending ? "Submitting..." : "Submit Feedback"}
-              </Button>
-            </div>
+            {/* Close button if user has already left feedback */}
+            {feedbackStatus?.hasFeedback && (
+              <div className="mt-6 flex justify-end">
+                <Button variant="outline" onClick={() => setShowFeedbackModal(false)}>Close</Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

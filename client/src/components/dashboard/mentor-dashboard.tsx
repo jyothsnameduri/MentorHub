@@ -1,12 +1,86 @@
 import { useAuth } from "@/hooks/use-auth";
 import StatsOverview from "@/components/dashboard/stats-card";
 import ActivityFeed from "@/components/dashboard/activity-feed";
-
 import SessionsChart from "@/components/dashboard/sessions-chart";
 import { cn, getStaggeredDelay } from "@/lib/utils";
-import { Calendar, BookOpen, Users, Lightbulb } from "lucide-react";
+import { Calendar, BookOpen, Users, Lightbulb, Bell, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { Session } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { format, parseISO } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Component to display pending session requests
+function PendingSessionRequests({ userId }: { userId?: number }) {
+  const { data: pendingRequests, isLoading } = useQuery<Session[]>({
+    queryKey: ["/api/session-requests"],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest("GET", "/api/session-requests");
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+        return [];
+      }
+    },
+    enabled: !!userId,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
+  }
+
+  if (!pendingRequests || pendingRequests.length === 0) {
+    return (
+      <div className="text-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+        <Clock className="h-8 w-8 mx-auto text-blue-500 opacity-70 mb-2" />
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          No pending session requests at this time.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {pendingRequests.map((request) => (
+        <div 
+          key={request.id} 
+          className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800/30 flex justify-between items-center"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700">
+                <Clock className="h-3 w-3 mr-1" />
+                Pending
+              </Badge>
+              <span className="text-sm font-medium">{request.topic}</span>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {format(parseISO(request.date), "MMM d")} at {format(parseISO(`2021-01-01T${request.time}`), "h:mm a")}
+            </div>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => window.location.href = "/my-sessions"}
+          >
+            Review
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MentorDashboard() {
   const { user } = useAuth();
@@ -83,16 +157,19 @@ export default function MentorDashboard() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="text-lg font-semibold mb-1 font-montserrat flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <span>Session Requests</span>
+                  <Bell className="h-5 w-5 text-primary" />
+                  <span>Pending Session Requests</span>
                 </h2>
                 <p className="text-sm text-muted-foreground font-inter">
-                  Review and manage your session requests.
+                  Review and manage your pending session requests.
                 </p>
               </div>
             </div>
+            
+            <PendingSessionRequests userId={user?.id} />
+            
             <Button
-              className="w-full font-medium"
+              className="w-full font-medium mt-4"
               onClick={() => window.location.href = "/my-sessions"}
             >
               View All Sessions

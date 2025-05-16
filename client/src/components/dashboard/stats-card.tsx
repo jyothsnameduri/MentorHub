@@ -19,8 +19,10 @@ export default function StatsOverview() {
     queryKey: ["/api/sessions"],
   });
 
+  // Get enhanced feedback with session details
   const { data: feedback, isLoading: feedbackLoading } = useQuery<any[]>({
     queryKey: ["/api/feedback"],
+    enabled: !!user,
   });
 
   const { data: mentors, isLoading: mentorsLoading } = useQuery({
@@ -33,11 +35,27 @@ export default function StatsOverview() {
   const totalHours = (sessions && Array.isArray(sessions) ? sessions.length : 0) * 1; // Assuming 1 hour per session
   const activeMentorsCount = user?.role === "mentee" ? (mentors && Array.isArray(mentors) ? mentors.length : 0) : 0;
   
-  // Calculate average rating
+  // Calculate feedback metrics
   let avgRating = 0;
+  let recentFeedbackCount = 0;
+  let highRatingCount = 0; // Count of ratings 4 or above
+  
   if (feedback && Array.isArray(feedback) && feedback.length > 0) {
+    // Calculate average rating
     const totalRating = feedback.reduce((sum, item) => sum + item.rating, 0);
     avgRating = Math.round((totalRating / feedback.length) * 10) / 10;
+    
+    // Count recent feedback (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    recentFeedbackCount = feedback.filter(item => {
+      const feedbackDate = new Date(item.created);
+      return feedbackDate >= thirtyDaysAgo;
+    }).length;
+    
+    // Count high ratings (4 or 5)
+    highRatingCount = feedback.filter(item => item.rating >= 4).length;
   }
 
   if (sessionsLoading || allSessionsLoading || feedbackLoading || (user?.role === "mentee" && mentorsLoading)) {
@@ -99,7 +117,21 @@ export default function StatsOverview() {
         icon={<Star className="h-6 w-6" />}
         title="Feedback Score"
         value={avgRating ? `${avgRating}/5` : "No ratings"}
-        footer={<p className="text-sm">Based on {feedback && Array.isArray(feedback) ? feedback.length : 0} sessions</p>}
+        footer={
+          <div className="space-y-1">
+            <p className="text-sm">Based on {feedback && Array.isArray(feedback) ? feedback.length : 0} sessions</p>
+            {recentFeedbackCount > 0 && (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {recentFeedbackCount} new feedback{recentFeedbackCount !== 1 ? 's' : ''} in the last 30 days
+              </p>
+            )}
+            {highRatingCount > 0 && (
+              <p className="text-xs text-green-700 dark:text-green-300">
+                {highRatingCount} high rating{highRatingCount !== 1 ? 's' : ''} (4-5 stars)
+              </p>
+            )}
+          </div>
+        }
         color="amber"
       />
     </section>
